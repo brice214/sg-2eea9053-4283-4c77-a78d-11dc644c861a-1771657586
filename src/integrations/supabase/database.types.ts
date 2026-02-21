@@ -727,6 +727,72 @@ export type Database = {
           },
         ]
       }
+      messages_agents: {
+        Row: {
+          agent_id: string
+          categorie: string | null
+          contenu: string
+          created_at: string | null
+          date_lecture: string | null
+          expediteur_id: string
+          expediteur_nom: string
+          expediteur_role: string | null
+          fichier_nom: string | null
+          fichier_url: string | null
+          id: string
+          lu: boolean | null
+          priorite: string | null
+          sujet: string
+        }
+        Insert: {
+          agent_id: string
+          categorie?: string | null
+          contenu: string
+          created_at?: string | null
+          date_lecture?: string | null
+          expediteur_id: string
+          expediteur_nom: string
+          expediteur_role?: string | null
+          fichier_nom?: string | null
+          fichier_url?: string | null
+          id?: string
+          lu?: boolean | null
+          priorite?: string | null
+          sujet: string
+        }
+        Update: {
+          agent_id?: string
+          categorie?: string | null
+          contenu?: string
+          created_at?: string | null
+          date_lecture?: string | null
+          expediteur_id?: string
+          expediteur_nom?: string
+          expediteur_role?: string | null
+          fichier_nom?: string | null
+          fichier_url?: string | null
+          id?: string
+          lu?: boolean | null
+          priorite?: string | null
+          sujet?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_agents_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_agents_expediteur_id_fkey"
+            columns: ["expediteur_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ministeres: {
         Row: {
           actif: boolean | null
@@ -905,6 +971,68 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rappels_solde: {
+        Row: {
+          agent_id: string
+          created_at: string | null
+          date_decision: string | null
+          date_paiement_prevu: string | null
+          id: string
+          montant_paye: number | null
+          montant_restant: number
+          montant_total: number
+          motif: string | null
+          numero_decision: string | null
+          periode_debut: string
+          periode_fin: string
+          statut: string | null
+          type_rappel: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string | null
+          date_decision?: string | null
+          date_paiement_prevu?: string | null
+          id?: string
+          montant_paye?: number | null
+          montant_restant: number
+          montant_total: number
+          motif?: string | null
+          numero_decision?: string | null
+          periode_debut: string
+          periode_fin: string
+          statut?: string | null
+          type_rappel: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string | null
+          date_decision?: string | null
+          date_paiement_prevu?: string | null
+          id?: string
+          montant_paye?: number | null
+          montant_restant?: number
+          montant_total?: number
+          motif?: string | null
+          numero_decision?: string | null
+          periode_debut?: string
+          periode_fin?: string
+          statut?: string | null
+          type_rappel?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rappels_solde_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
             referencedColumns: ["id"]
           },
         ]
