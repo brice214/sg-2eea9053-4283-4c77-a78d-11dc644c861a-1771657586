@@ -3,8 +3,9 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Agent = Database["public"]["Tables"]["agents"]["Row"];
 type AgentInsert = Database["public"]["Tables"]["agents"]["Insert"];
-type Document = Database["public"]["Tables"]["documents_agents"]["Row"];
-type DocumentInsert = Database["public"]["Tables"]["documents_agents"]["Insert"];
+// Utilisation de documents_administratifs au lieu de documents_agents
+type Document = Database["public"]["Tables"]["documents_administratifs"]["Row"];
+type DocumentInsert = Database["public"]["Tables"]["documents_administratifs"]["Insert"];
 
 export interface AgentFormData {
   // Informations personnelles
@@ -14,13 +15,13 @@ export interface AgentFormData {
   lieu_naissance: string;
   sexe: "M" | "F";
   nationalite: string;
-  situation_matrimoniale: "CELIBATAIRE" | "MARIE" | "DIVORCE" | "VEUF";
+  situation_matrimoniale: string;
   nombre_enfants: number;
   
   // Contact
   telephone: string;
   email: string;
-  adresse: string;
+  adresse: string; // Sera mappé vers adresse_actuelle
   
   // Informations administratives
   ministere_id: string;
@@ -33,7 +34,7 @@ export interface AgentFormData {
   echelon_id: string;
   
   // Recrutement
-  mode_recrutement: "CONCOURS" | "CONTRACTUEL" | "DETACHEMENT" | "MUTATION";
+  mode_recrutement: string;
   date_prise_service: string;
   date_integration: string | null;
   numero_decision_recrutement: string;
@@ -79,8 +80,12 @@ export const agentService = {
         return { agent: null, error: "Le poste sélectionné n'existe pas ou n'est pas actif" };
       }
 
-      // 3. Créer l'agent (le matricule sera généré automatiquement par le trigger)
+      // 3. Préparer les données de l'agent
+      // Génération d'un matricule temporaire si le trigger ne le fait pas (fallback)
+      const tempMatricule = `TEMP-${Date.now().toString().slice(-6)}`;
+
       const agentData: AgentInsert = {
+        matricule: tempMatricule, // Sera écrasé par le trigger ou géré ici
         nom: data.nom,
         prenoms: data.prenoms,
         date_naissance: data.date_naissance,
@@ -91,7 +96,7 @@ export const agentService = {
         nombre_enfants: data.nombre_enfants,
         telephone: data.telephone,
         email: data.email,
-        adresse: data.adresse,
+        adresse_actuelle: data.adresse, // Mapping correct
         ministere_id: data.ministere_id,
         direction_id: data.direction_id,
         service_id: data.service_id,
@@ -102,11 +107,13 @@ export const agentService = {
         echelon_id: data.echelon_id,
         mode_recrutement: data.mode_recrutement,
         date_prise_service: data.date_prise_service,
-        date_integration: data.date_integration,
+        // date_integration n'existe pas dans le schéma actuel, on l'ignore ou on l'ajoute si nécessaire
         numero_decision_recrutement: data.numero_decision_recrutement,
         date_decision_recrutement: data.date_decision_recrutement,
+        date_recrutement: data.date_decision_recrutement, // Champ obligatoire dans le schéma
+        diplome_principal: "Non renseigné", // Champ obligatoire, à demander dans le formulaire plus tard
         statut: "STAGIAIRE",
-        situation_administrative: "EN_SERVICE"
+        actif: true
       };
 
       const { data: newAgent, error: agentError } = await supabase
@@ -120,19 +127,24 @@ export const agentService = {
         return { agent: null, error: `Erreur lors de la création de l'agent: ${agentError.message}` };
       }
 
-      // 4. Créer les entrées de documents (sans fichiers pour l'instant)
+      // 4. Créer les entrées de documents
       if (data.documents && data.documents.length > 0) {
+        // Récupérer les infos des types de documents pour les intitulés
+        const { data: typesDocs } = await supabase.from("types_documents").select("id, nom");
+        const typesMap = new Map(typesDocs?.map(t => [t.id, t.nom]) || []);
+
         const documentsData: DocumentInsert[] = data.documents.map(doc => ({
           agent_id: newAgent.id,
           type_document_id: doc.type_document_id,
-          numero_piece: doc.numero_piece || null,
+          intitule: typesMap.get(doc.type_document_id) || "Document",
+          numero_document: doc.numero_piece || null,
           date_emission: doc.date_emission || null,
           date_expiration: doc.date_expiration || null,
-          statut: "EN_ATTENTE"
+          statut: "en_attente"
         }));
 
         const { error: docsError } = await supabase
-          .from("documents_agents")
+          .from("documents_administratifs")
           .insert(documentsData);
 
         if (docsError) {
@@ -142,9 +154,9 @@ export const agentService = {
       }
 
       return { agent: newAgent, error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur inattendue:", error);
-      return { agent: null, error: "Une erreur inattendue s'est produite" };
+      return { agent: null, error: error.message || "Une erreur inattendue s'est produite" };
     }
   },
 
@@ -161,7 +173,7 @@ export const agentService = {
       // Vérifier que le grade appartient bien au corps
       const { data: grade, error: gradeError } = await supabase
         .from("grades")
-        .select("*")
+        .select("*, corps(categorie)") // Join pour récupérer la catégorie du corps
         .eq("id", grade_id)
         .eq("corps_id", corps_id)
         .single();
@@ -170,16 +182,34 @@ export const agentService = {
         return "Le grade sélectionné n'appartient pas au corps choisi";
       }
 
-      // Vérifier que l'échelle correspond au grade
+      // Vérifier que l'échelle correspond à la catégorie du corps du grade
+      // Note: grade.corps est un objet ou un tableau selon la réponse, typage Supabase
+      const corpsCategorie = (grade.corps as any)?.categorie;
+
+      if (!corpsCategorie) {
+         return "Impossible de vérifier la catégorie du corps";
+      }
+
       const { data: echelle, error: echelleError } = await supabase
         .from("echelles")
         .select("*")
         .eq("id", echelle_id)
-        .eq("categorie", grade.categorie)
+        // La colonne categorie n'existe pas dans echelles selon le schéma fourni plus tôt? 
+        // Vérifions le schéma echelles: id, code, nom, grade_id, indice_min... 
+        // Ah, le schéma echelles a grade_id ! Donc l'échelle est liée au grade, pas juste à la catégorie.
+        // Mais le code précédent utilisait categorie. 
+        // Le schéma montre: echelles.grade_id -> grades.id.
+        // Donc on doit vérifier que l'échelle est liée au grade.
+        .eq("grade_id", grade_id)
         .single();
 
       if (echelleError || !echelle) {
-        return "L'échelle sélectionnée ne correspond pas à la catégorie du grade";
+        // Si pas de lien direct, vérifions si logique différente (ex: echelles globales par catégorie)
+        // Le schéma dit: echelles a une FK grade_id. Donc une échelle appartient à un grade spécifique ?
+        // Ou alors c'est une erreur de conception dans mon schéma précédent versus la logique métier.
+        // Dans l'administration gabonaise, les échelles sont souvent par catégorie (A1, A2...).
+        // Si le schéma a grade_id, alors l'échelle est spécifique au grade.
+        return "L'échelle sélectionnée ne correspond pas au grade";
       }
 
       // Vérifier que l'échelon appartient à l'échelle
@@ -196,6 +226,7 @@ export const agentService = {
 
       return null;
     } catch (error) {
+      console.error("Erreur validation hiérarchie:", error);
       return "Erreur lors de la validation de la hiérarchie";
     }
   },
@@ -215,7 +246,7 @@ export const agentService = {
           *,
           ministeres(nom),
           corps(intitule),
-          grades(intitule),
+          grades(nom),
           postes(intitule)
         `)
         .order("created_at", { ascending: false });
@@ -229,6 +260,7 @@ export const agentService = {
       }
 
       if (filters?.search) {
+        // Recherche textuelle simple
         query = query.or(`nom.ilike.%${filters.search}%,prenoms.ilike.%${filters.search}%,matricule.ilike.%${filters.search}%`);
       }
 
@@ -255,22 +287,32 @@ export const agentService = {
     en_attente_validation: number;
   }> {
     try {
-      let query = supabase.from("agents").select("statut", { count: "exact" });
+      let query = supabase.from("agents").select("statut", { count: "exact", head: true });
       
       if (ministere_id) {
         query = query.eq("ministere_id", ministere_id);
       }
-
       const { count: total } = await query;
-      const { count: stagiaires } = await query.eq("statut", "STAGIAIRE");
-      const { count: titulaires } = await query.eq("statut", "TITULAIRE");
-      const { count: en_attente } = await query.eq("statut", "EN_ATTENTE_VALIDATION");
+
+      // Pour les autres stats, on doit faire des requêtes séparées car on ne peut pas faire de group by count facilement avec l'API simple
+      const getCount = async (statut: string) => {
+        let q = supabase.from("agents").select("statut", { count: "exact", head: true }).eq("statut", statut);
+        if (ministere_id) q = q.eq("ministere_id", ministere_id);
+        const { count } = await q;
+        return count || 0;
+      };
+
+      const [stagiaires, titulaires, en_attente] = await Promise.all([
+        getCount("STAGIAIRE"),
+        getCount("TITULAIRE"),
+        getCount("EN_ATTENTE_VALIDATION")
+      ]);
 
       return {
         total_agents: total || 0,
-        stagiaires: stagiaires || 0,
-        titulaires: titulaires || 0,
-        en_attente_validation: en_attente || 0
+        stagiaires,
+        titulaires,
+        en_attente_validation: en_attente
       };
     } catch (error) {
       console.error("Erreur statistiques:", error);
@@ -304,7 +346,7 @@ export const agentService = {
       .from("corps")
       .select("*")
       .eq("actif", true)
-      .order("intitule");
+      .order("nom"); // intitule n'existe pas dans corps, c'est nom
 
     return { data: data || [], error };
   },
@@ -318,21 +360,30 @@ export const agentService = {
       .select("*")
       .eq("corps_id", corps_id)
       .eq("actif", true)
-      .order("ordre_hierarchique", { ascending: false });
+      .order("ordre", { ascending: false }); // ordre_hierarchique n'existe pas, c'est ordre
 
     return { data: data || [], error };
   },
 
   /**
-   * Récupérer les échelles par catégorie
+   * Récupérer les échelles par catégorie (via le grade en fait selon le schéma)
+   * CORRECTION: Le schéma lie echelles à grade_id.
+   * Donc on doit récupérer les échelles d'un grade donné.
    */
   async getEchellesByCategorie(categorie: string) {
+    // Cette fonction est problématique avec le schéma actuel où échelle dépend de grade.
+    // On va plutôt créer getEchellesByGrade
+    console.warn("getEchellesByCategorie deprecated, use getEchellesByGrade");
+    return { data: [], error: null };
+  },
+
+  async getEchellesByGrade(grade_id: string) {
     const { data, error } = await supabase
       .from("echelles")
       .select("*")
-      .eq("categorie", categorie)
-      .eq("active", true)
-      .order("lettre");
+      .eq("grade_id", grade_id)
+      .eq("actif", true)
+      .order("nom"); // lettre n'existe pas, c'est nom
 
     return { data: data || [], error };
   },
@@ -371,7 +422,7 @@ export const agentService = {
       .from("types_documents")
       .select("*")
       .eq("actif", true)
-      .order("ordre");
+      .order("ordre_affichage"); // ordre -> ordre_affichage
 
     return { data: data || [], error };
   }

@@ -89,10 +89,11 @@ export default function CreateAgent() {
   const handleGradeChange = async (grade_id: string) => {
     setFormData({ ...formData, grade_id, echelle_id: undefined, echelon_id: undefined });
     
-    // Trouver la catégorie du grade
+    // Trouver la catégorie du grade (plus nécessaire pour l'appel mais utile si besoin d'info)
     const grade = grades.find(g => g.id === grade_id);
     if (grade) {
-      const { data } = await agentService.getEchellesByCategorie(grade.categorie);
+      // CORRECTION: Utiliser getEchellesByGrade au lieu de getEchellesByCategorie
+      const { data } = await agentService.getEchellesByGrade(grade_id);
       setEchelles(data);
       setEchelons([]);
     }
@@ -402,7 +403,7 @@ export default function CreateAgent() {
                       <SelectContent>
                         {corps.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
-                            {c.intitule} ({c.categorie})
+                            {c.nom} ({c.categorie})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -422,7 +423,7 @@ export default function CreateAgent() {
                       <SelectContent>
                         {grades.map((g) => (
                           <SelectItem key={g.id} value={g.id}>
-                            {g.intitule}
+                            {g.nom}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -444,7 +445,7 @@ export default function CreateAgent() {
                       <SelectContent>
                         {echelles.map((e) => (
                           <SelectItem key={e.id} value={e.id}>
-                            Échelle {e.lettre}
+                            Échelle {e.nom}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -464,7 +465,7 @@ export default function CreateAgent() {
                       <SelectContent>
                         {echelons.map((ec) => (
                           <SelectItem key={ec.id} value={ec.id}>
-                            Échelon {ec.numero} ({ec.indice} points)
+                            Échelon {ec.numero} ({ec.indice_majore} pts)
                           </SelectItem>
                         ))}
                       </SelectContent>

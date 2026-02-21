@@ -22,6 +22,7 @@ export type Database = {
           annee_obtention: number | null
           corps_id: string
           created_at: string | null
+          date_decision_recrutement: string | null
           date_naissance: string
           date_premiere_nomination: string | null
           date_prise_service: string | null
@@ -41,10 +42,12 @@ export type Database = {
           lieu_naissance: string
           matricule: string
           ministere_id: string | null
+          mode_recrutement: string | null
           nationalite: string | null
           nom: string
           nom_jeune_fille: string | null
           nombre_enfants: number | null
+          numero_decision_recrutement: string | null
           numero_dossier: string | null
           observations: string | null
           poste_id: string | null
@@ -67,6 +70,7 @@ export type Database = {
           annee_obtention?: number | null
           corps_id: string
           created_at?: string | null
+          date_decision_recrutement?: string | null
           date_naissance: string
           date_premiere_nomination?: string | null
           date_prise_service?: string | null
@@ -86,10 +90,12 @@ export type Database = {
           lieu_naissance: string
           matricule: string
           ministere_id?: string | null
+          mode_recrutement?: string | null
           nationalite?: string | null
           nom: string
           nom_jeune_fille?: string | null
           nombre_enfants?: number | null
+          numero_decision_recrutement?: string | null
           numero_dossier?: string | null
           observations?: string | null
           poste_id?: string | null
@@ -112,6 +118,7 @@ export type Database = {
           annee_obtention?: number | null
           corps_id?: string
           created_at?: string | null
+          date_decision_recrutement?: string | null
           date_naissance?: string
           date_premiere_nomination?: string | null
           date_prise_service?: string | null
@@ -131,10 +138,12 @@ export type Database = {
           lieu_naissance?: string
           matricule?: string
           ministere_id?: string | null
+          mode_recrutement?: string | null
           nationalite?: string | null
           nom?: string
           nom_jeune_fille?: string | null
           nombre_enfants?: number | null
+          numero_decision_recrutement?: string | null
           numero_dossier?: string | null
           observations?: string | null
           poste_id?: string | null
