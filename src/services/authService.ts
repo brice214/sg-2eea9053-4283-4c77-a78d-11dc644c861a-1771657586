@@ -188,17 +188,29 @@ export const authService = {
         return { profile: null, error: null };
       }
 
-      const { data: profile, error } = await supabase
+      // First, get the basic profile
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select(`
-          *,
-          ministeres(id, nom, sigle, code)
-        `)
+        .select("*")
         .eq("id", user.id)
         .single();
 
-      if (error) {
-        return { profile: null, error: { message: error.message } };
+      if (profileError) {
+        return { profile: null, error: { message: profileError.message } };
+      }
+
+      // Then, try to get ministry data if ministere_id exists
+      if (profile && profile.ministere_id) {
+        const { data: ministere } = await supabase
+          .from("ministeres")
+          .select("id, nom, sigle, code")
+          .eq("id", profile.ministere_id)
+          .single();
+        
+        // Attach ministry data to profile if found
+        if (ministere) {
+          profile.ministeres = ministere;
+        }
       }
 
       return { profile, error: null };
