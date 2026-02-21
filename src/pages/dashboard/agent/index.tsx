@@ -7,9 +7,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
 import { authService } from "@/services/authService";
-import { agentService } from "@/services/agentService";
-import { agentDashboardService, type MessageWithSender, type RappelFinancier } from "@/services/agentDashboardService";
+import { agentDashboardService, type MessageWithSender, type RappelFinancier, type AgentCompletProfile } from "@/services/agentDashboardService";
 import { 
   User, 
   Mail, 
@@ -34,49 +34,25 @@ import {
   TrendingDown,
   AlertCircle,
   CheckCircle2,
-  Clock
+  Clock,
+  Target,
+  Award,
+  CalendarDays,
+  MapPinned,
+  School,
+  Landmark,
+  Timer,
+  Activity,
+  BarChart3,
+  Zap,
+  Star
 } from "lucide-react";
 
-interface AgentProfile {
-  id: string;
-  matricule: string;
-  nom: string;
-  prenoms: string;
-  email: string;
-  telephone?: string;
-  date_naissance?: string;
-  lieu_naissance?: string;
-  situation_matrimoniale?: string;
-  nombre_enfants?: number;
-  adresse_actuelle?: string;
-  date_recrutement?: string;
-  ministere?: {
-    nom: string;
-    sigle: string;
-  };
-  corps?: {
-    nom: string;
-  };
-  grade?: {
-    nom: string;
-  };
-  informations_financieres?: {
-    salaire_base: number;
-    indemnite_logement: number;
-    indemnite_transport: number;
-    total_brut: number;
-    total_retenues: number;
-    net_a_payer: number;
-    numero_compte?: string;
-    banque?: string;
-  };
-}
-
-type MenuSection = "dashboard" | "finances" | "documents" | "messages";
+type MenuSection = "dashboard" | "profil" | "carriere" | "finances" | "documents" | "messages";
 
 export default function AgentDashboard() {
   const router = useRouter();
-  const [agent, setAgent] = useState<AgentProfile | null>(null);
+  const [agent, setAgent] = useState<AgentCompletProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<MenuSection>("dashboard");
   const [rappelsData, setRappelsData] = useState<RappelFinancier | null>(null);
@@ -116,7 +92,7 @@ export default function AgentDashboard() {
 
   const loadAgentData = async (userId: string) => {
     try {
-      const { data, error } = await agentService.getAgentByUserId(userId);
+      const { data, error } = await agentDashboardService.getAgentCompletProfile(userId);
       
       if (error || !data) {
         console.error("❌ Erreur chargement agent:", error);
@@ -126,15 +102,12 @@ export default function AgentDashboard() {
 
       setAgent(data);
 
-      // Charger les rappels financiers
       const { data: rappels } = await agentDashboardService.getRappelsFinanciers(data.id);
       setRappelsData(rappels);
 
-      // Charger les messages
       const { data: msgs } = await agentDashboardService.getMessages(data.id);
       setMessages(msgs || []);
 
-      // Compter les non lus
       const count = await agentDashboardService.countUnreadMessages(data.id);
       setUnreadCount(count);
     } catch (error) {
@@ -153,17 +126,6 @@ export default function AgentDashboard() {
     await agentDashboardService.markMessageAsRead(messageId);
     setMessages(prev => prev.map(m => m.id === messageId ? { ...m, lu: true } : m));
     setUnreadCount(prev => Math.max(0, prev - 1));
-  };
-
-  const getRappelLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      promotion: "Promotion",
-      regularisation: "Régularisation",
-      avancement: "Avancement",
-      indemnite: "Indemnité",
-      autre: "Autre rappel"
-    };
-    return labels[type] || type;
   };
 
   const formatCurrency = (amount: number) => {
@@ -208,6 +170,17 @@ export default function AgentDashboard() {
     return situation ? labels[situation] || situation : "Non renseigné";
   };
 
+  const getRappelLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      promotion: "Promotion",
+      regularisation: "Régularisation",
+      avancement: "Avancement",
+      indemnite: "Indemnité",
+      autre: "Autre rappel"
+    };
+    return labels[type] || type;
+  };
+
   const getStatutRappelColor = (statut: string) => {
     switch (statut) {
       case "paye": return "bg-green-100 text-green-800 border-green-200";
@@ -236,7 +209,9 @@ export default function AgentDashboard() {
   };
 
   const menuItems = [
-    { id: "dashboard" as MenuSection, label: "Tableau de bord", icon: Home },
+    { id: "dashboard" as MenuSection, label: "Vue d'ensemble", icon: BarChart3 },
+    { id: "profil" as MenuSection, label: "Profil Personnel", icon: User },
+    { id: "carriere" as MenuSection, label: "Carrière & Parcours", icon: Target },
     { id: "finances" as MenuSection, label: "Finances & Rappels", icon: Wallet },
     { id: "documents" as MenuSection, label: "Documents", icon: FileText },
     { id: "messages" as MenuSection, label: "Messagerie", icon: MessageSquare, badge: unreadCount }
@@ -244,10 +219,13 @@ export default function AgentDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement de votre profil...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-20 w-20 border-t-2 border-b-2 border-purple-500 mx-auto mb-6"></div>
+            <div className="absolute inset-0 animate-ping rounded-full h-20 w-20 border-4 border-purple-300 opacity-20 mx-auto"></div>
+          </div>
+          <p className="text-white text-lg font-medium">Chargement de votre espace...</p>
         </div>
       </div>
     );
@@ -255,14 +233,14 @@ export default function AgentDashboard() {
 
   if (!agent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <Card className="w-full max-w-md bg-white/10 backdrop-blur-lg border-white/20">
           <CardHeader>
-            <CardTitle className="text-red-600">Profil non trouvé</CardTitle>
-            <CardDescription>Impossible de charger vos informations</CardDescription>
+            <CardTitle className="text-red-400">Profil non trouvé</CardTitle>
+            <CardDescription className="text-gray-300">Impossible de charger vos informations</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => router.push("/auth/login")} className="w-full">
+            <Button onClick={() => router.push("/auth/login")} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
               Retour à la connexion
             </Button>
           </CardContent>
@@ -271,6 +249,8 @@ export default function AgentDashboard() {
     );
   }
 
+  const stats = agentDashboardService.calculateCareerStats(agent);
+
   return (
     <>
       <SEO 
@@ -278,32 +258,50 @@ export default function AgentDashboard() {
         description="Tableau de bord personnel de l'agent public"
       />
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        {/* Header fixe */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        {/* Header Premium */}
+        <header className="bg-black/30 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                    <User className="h-6 w-6 text-white" />
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/50">
+                    <Zap className="h-7 w-7 text-white" />
                   </div>
-                  <div>
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                      USSALA
-                    </h1>
-                    <p className="text-xs text-gray-500">Mon Espace Agent</p>
-                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse"></div>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+                    USSALA Pro
+                  </h1>
+                  <p className="text-xs text-gray-400">Votre espace intelligent</p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
+                {/* Notifications */}
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="relative text-white hover:bg-white/10"
+                  onClick={() => setActiveSection("messages")}
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center font-bold animate-pulse">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+
+                <Separator orientation="vertical" className="h-8 bg-white/20" />
+
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold text-gray-900">{agent.prenoms} {agent.nom}</p>
-                  <p className="text-xs text-gray-500">{agent.matricule}</p>
+                  <p className="text-sm font-semibold text-white">{agent.prenoms} {agent.nom}</p>
+                  <p className="text-xs text-gray-400">{agent.matricule}</p>
                 </div>
-                <Avatar className="h-10 w-10 border-2 border-emerald-200">
-                  <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500 text-white font-semibold">
+                <Avatar className="h-11 w-11 border-2 border-purple-400/50 ring-2 ring-purple-500/30">
+                  <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-lg">
                     {getInitials(agent.nom, agent.prenoms)}
                   </AvatarFallback>
                 </Avatar>
@@ -311,7 +309,7 @@ export default function AgentDashboard() {
                   variant="ghost" 
                   size="sm"
                   onClick={handleLogout}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Déconnexion
@@ -323,8 +321,8 @@ export default function AgentDashboard() {
 
         {/* Layout principal */}
         <div className="flex">
-          {/* Menu latéral gauche */}
-          <aside className="w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-73px)] sticky top-[73px]">
+          {/* Menu latéral premium */}
+          <aside className="w-72 bg-black/20 backdrop-blur-xl border-r border-white/10 min-h-[calc(100vh-81px)] sticky top-[81px]">
             <nav className="p-4 space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
@@ -334,331 +332,637 @@ export default function AgentDashboard() {
                   <button
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                    className={`w-full group flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${
                       isActive
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50 scale-105"
+                        : "text-gray-300 hover:bg-white/5 hover:text-white"
                     }`}
                   >
-                    <Icon className="h-5 w-5" />
+                    <div className={`p-2 rounded-lg transition-all ${isActive ? "bg-white/20" : "bg-white/5 group-hover:bg-white/10"}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
                     <span className="font-medium flex-1 text-left">{item.label}</span>
                     {item.badge && item.badge > 0 && (
-                      <Badge className="bg-red-500 text-white border-0 h-5 min-w-5 px-1.5 text-xs">
+                      <Badge className="bg-red-500 text-white border-0 h-6 min-w-6 px-2 text-xs font-bold animate-pulse">
                         {item.badge}
                       </Badge>
                     )}
-                    {isActive && <ChevronRight className="h-4 w-4" />}
+                    {isActive && <ChevronRight className="h-5 w-5" />}
                   </button>
                 );
               })}
             </nav>
 
-            {/* Stats rapides */}
-            <div className="p-4 mt-6 border-t border-gray-200">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase mb-3">Statistiques</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Ancienneté</span>
-                  <span className="text-sm font-bold text-emerald-600">
-                    {agent.date_recrutement 
-                      ? Math.floor((new Date().getTime() - new Date(agent.date_recrutement).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
-                      : 0} ans
-                  </span>
+            {/* Stats rapides premium */}
+            <div className="p-4 mt-6 border-t border-white/10">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase mb-4 flex items-center gap-2">
+                <Activity className="h-3 w-3" />
+                Statistiques Rapides
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg p-3 border border-blue-500/20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-blue-300">Ancienneté</span>
+                    <Clock className="h-3 w-3 text-blue-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-white">{stats.anciennete} <span className="text-sm text-gray-400">ans</span></p>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Messages</span>
-                  <span className="text-sm font-bold text-blue-600">{messages.length}</span>
-                </div>
+                
+                {stats.anneesJusquaRetraite !== null && (
+                  <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-lg p-3 border border-orange-500/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-orange-300">Retraite dans</span>
+                      <Timer className="h-3 w-3 text-orange-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-white">{stats.anneesJusquaRetraite} <span className="text-sm text-gray-400">ans</span></p>
+                  </div>
+                )}
+
                 {rappelsData && rappelsData.solde_restant > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Rappels en cours</span>
-                    <span className="text-sm font-bold text-yellow-600">{rappelsData.rappels.filter(r => r.statut !== "paye").length}</span>
+                  <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg p-3 border border-purple-500/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-purple-300">Rappels à percevoir</span>
+                      <Wallet className="h-3 w-3 text-purple-400" />
+                    </div>
+                    <p className="text-lg font-bold text-white">{formatCurrency(rappelsData.solde_restant)}</p>
                   </div>
                 )}
               </div>
             </div>
           </aside>
 
-          {/* Contenu principal */}
+          {/* Contenu principal premium */}
           <main className="flex-1 p-6">
-            <ScrollArea className="h-[calc(100vh-97px)]">
+            <ScrollArea className="h-[calc(100vh-105px)]">
               {activeSection === "dashboard" && (
                 <div className="space-y-6">
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                      Bienvenue, {agent.prenoms} !
-                    </h2>
-                    <p className="text-gray-600">
-                      {agent.ministere?.nom}
-                    </p>
+                  {/* Hero Section */}
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-pink-600 to-orange-600 p-8 shadow-2xl">
+                    <div className="absolute inset-0 bg-black/20"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h2 className="text-4xl font-bold text-white mb-2">
+                            Bienvenue, {agent.prenoms} ! 👋
+                          </h2>
+                          <p className="text-white/80 text-lg mb-4">
+                            {agent.ministere?.nom}
+                          </p>
+                          <div className="flex items-center gap-4">
+                            <Badge className="bg-white/20 text-white border-0 backdrop-blur-sm px-4 py-1.5">
+                              {agent.grade?.nom || "Grade non défini"}
+                            </Badge>
+                            <Badge className="bg-white/20 text-white border-0 backdrop-blur-sm px-4 py-1.5">
+                              {agent.corps?.nom || "Corps non défini"}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="hidden lg:block">
+                          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+                            <Award className="h-12 w-12 text-white mb-2" />
+                            <p className="text-white text-xs">Statut actif</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Vue d'ensemble financière */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="border-l-4 border-l-emerald-500">
+                  {/* Widgets Analytics */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 backdrop-blur-sm">
                       <CardHeader className="pb-3">
-                        <CardDescription className="text-xs">Salaire mensuel net</CardDescription>
-                        <CardTitle className="text-2xl font-bold text-emerald-600">
+                        <div className="flex items-center justify-between">
+                          <div className="p-2 bg-blue-500/20 rounded-lg">
+                            <DollarSign className="h-5 w-5 text-blue-400" />
+                          </div>
+                          <TrendingUp className="h-4 w-4 text-blue-400" />
+                        </div>
+                        <CardDescription className="text-xs text-blue-300 mt-2">Salaire Net Mensuel</CardDescription>
+                        <CardTitle className="text-2xl font-bold text-white">
                           {agent.informations_financieres ? formatCurrency(agent.informations_financieres.net_a_payer) : "N/A"}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <TrendingUp className="h-3 w-3" />
-                          <span>Paiement régulier</span>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20 backdrop-blur-sm">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="p-2 bg-purple-500/20 rounded-lg">
+                            <Clock className="h-5 w-5 text-purple-400" />
+                          </div>
+                          <Activity className="h-4 w-4 text-purple-400" />
                         </div>
-                      </CardContent>
+                        <CardDescription className="text-xs text-purple-300 mt-2">Ancienneté</CardDescription>
+                        <CardTitle className="text-2xl font-bold text-white">
+                          {stats.anciennete} ans
+                        </CardTitle>
+                      </CardHeader>
                     </Card>
 
                     {rappelsData && (
-                      <>
-                        <Card className="border-l-4 border-l-blue-500">
-                          <CardHeader className="pb-3">
-                            <CardDescription className="text-xs">Total rappels</CardDescription>
-                            <CardTitle className="text-2xl font-bold text-blue-600">
-                              {formatCurrency(rappelsData.total_rappel)}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                              <Clock className="h-3 w-3" />
-                              <span>{rappelsData.rappels.length} rappel(s)</span>
+                      <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20 backdrop-blur-sm">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="p-2 bg-orange-500/20 rounded-lg">
+                              <Wallet className="h-5 w-5 text-orange-400" />
                             </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="border-l-4 border-l-yellow-500">
-                          <CardHeader className="pb-3">
-                            <CardDescription className="text-xs">Solde à percevoir</CardDescription>
-                            <CardTitle className="text-2xl font-bold text-yellow-600">
-                              {formatCurrency(rappelsData.solde_restant)}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                              {rappelsData.solde_restant > 0 ? (
-                                <>
-                                  <AlertCircle className="h-3 w-3" />
-                                  <span>En attente</span>
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  <span>À jour</span>
-                                </>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </>
+                            <AlertCircle className="h-4 w-4 text-orange-400" />
+                          </div>
+                          <CardDescription className="text-xs text-orange-300 mt-2">Rappels à percevoir</CardDescription>
+                          <CardTitle className="text-2xl font-bold text-white">
+                            {formatCurrency(rappelsData.solde_restant)}
+                          </CardTitle>
+                        </CardHeader>
+                      </Card>
                     )}
+
+                    <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 backdrop-blur-sm">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="p-2 bg-green-500/20 rounded-lg">
+                            <MessageSquare className="h-5 w-5 text-green-400" />
+                          </div>
+                          <Bell className="h-4 w-4 text-green-400" />
+                        </div>
+                        <CardDescription className="text-xs text-green-300 mt-2">Messages</CardDescription>
+                        <CardTitle className="text-2xl font-bold text-white">
+                          {messages.length} <span className="text-sm text-gray-400">({unreadCount} non lus)</span>
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+                  </div>
+
+                  {/* Timeline de carrière Preview */}
+                  <Card className="bg-black/20 backdrop-blur-xl border-white/10">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Target className="h-6 w-6 text-purple-400" />
+                        Progression de Carrière
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Votre parcours professionnel en un coup d'œil
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Progress bar */}
+                      {stats.anneesJusquaRetraite !== null && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Progression vers la retraite</span>
+                            <span className="text-white font-semibold">
+                              {Math.round((stats.anciennete / (stats.anciennete + stats.anneesJusquaRetraite)) * 100)}%
+                            </span>
+                          </div>
+                          <Progress 
+                            value={(stats.anciennete / (stats.anciennete + stats.anneesJusquaRetraite)) * 100} 
+                            className="h-3 bg-white/10"
+                          />
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        {agent.date_recrutement && (
+                          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CalendarDays className="h-4 w-4 text-blue-400" />
+                              <p className="text-xs text-gray-400">Recrutement</p>
+                            </div>
+                            <p className="text-white font-semibold">{formatDate(agent.date_recrutement)}</p>
+                          </div>
+                        )}
+                        {agent.date_integration && (
+                          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <School className="h-4 w-4 text-purple-400" />
+                              <p className="text-xs text-gray-400">Intégration</p>
+                            </div>
+                            <p className="text-white font-semibold">{formatDate(agent.date_integration)}</p>
+                          </div>
+                        )}
+                        {agent.date_titularisation && (
+                          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Award className="h-4 w-4 text-green-400" />
+                              <p className="text-xs text-gray-400">Titularisation</p>
+                            </div>
+                            <p className="text-white font-semibold">{formatDate(agent.date_titularisation)}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-white/20 text-white hover:bg-white/10"
+                        onClick={() => setActiveSection("carriere")}
+                      >
+                        Voir la timeline complète
+                        <ChevronRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Alertes et Notifications */}
+                  {(unreadCount > 0 || (rappelsData && rappelsData.solde_restant > 0)) && (
+                    <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/20 backdrop-blur-sm">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <Bell className="h-5 w-5 text-yellow-400" />
+                          Notifications Importantes
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        {unreadCount > 0 && (
+                          <div className="flex items-center gap-3 p-3 bg-purple-500/20 rounded-lg border border-purple-500/30">
+                            <MessageSquare className="h-5 w-5 text-purple-400" />
+                            <div className="flex-1">
+                              <p className="text-white font-medium text-sm">Nouveaux messages</p>
+                              <p className="text-gray-400 text-xs">Vous avez {unreadCount} message{unreadCount > 1 ? "s" : ""} non lu{unreadCount > 1 ? "s" : ""}</p>
+                            </div>
+                            <Button size="sm" variant="outline" className="border-purple-400/50 text-purple-400 hover:bg-purple-500/20" onClick={() => setActiveSection("messages")}>
+                              Voir
+                            </Button>
+                          </div>
+                        )}
+                        {rappelsData && rappelsData.solde_restant > 0 && (
+                          <div className="flex items-center gap-3 p-3 bg-orange-500/20 rounded-lg border border-orange-500/30">
+                            <Wallet className="h-5 w-5 text-orange-400" />
+                            <div className="flex-1">
+                              <p className="text-white font-medium text-sm">Rappels de solde en attente</p>
+                              <p className="text-gray-400 text-xs">{formatCurrency(rappelsData.solde_restant)} à percevoir</p>
+                            </div>
+                            <Button size="sm" variant="outline" className="border-orange-400/50 text-orange-400 hover:bg-orange-500/20" onClick={() => setActiveSection("finances")}>
+                              Détails
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {activeSection === "profil" && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+                      <User className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-white">Profil Personnel</h2>
+                      <p className="text-gray-400">Informations personnelles et familiales</p>
+                    </div>
                   </div>
 
                   {/* Informations personnelles */}
-                  <Card>
+                  <Card className="bg-black/20 backdrop-blur-xl border-white/10">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <User className="h-5 w-5 text-emerald-600" />
-                        Informations Personnelles
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <User className="h-5 w-5 text-blue-400" />
+                        Identité
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500">Matricule</p>
-                          <p className="font-semibold text-gray-900">{agent.matricule}</p>
+                        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1">Matricule</p>
+                          <p className="font-mono font-bold text-white text-lg">{agent.matricule}</p>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1">Nom complet</p>
+                          <p className="font-semibold text-white">{agent.prenoms} {agent.nom}</p>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
                             <Mail className="h-3 w-3" />
                             Email
                           </p>
-                          <p className="font-medium text-gray-700">{agent.email}</p>
+                          <p className="text-white">{agent.email}</p>
                         </div>
                         {agent.telephone && (
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
                               <Phone className="h-3 w-3" />
                               Téléphone
                             </p>
-                            <p className="font-medium text-gray-700">{agent.telephone}</p>
+                            <p className="text-white font-medium">{agent.telephone}</p>
                           </div>
                         )}
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             Date de naissance
                           </p>
-                          <p className="font-medium text-gray-700">{formatDate(agent.date_naissance)}</p>
+                          <p className="text-white font-medium">{formatDate(agent.date_naissance)}</p>
+                          {stats.age && (
+                            <p className="text-xs text-gray-500 mt-1">{stats.age} ans</p>
+                          )}
                         </div>
                         {agent.lieu_naissance && (
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
                               <MapPin className="h-3 w-3" />
                               Lieu de naissance
                             </p>
-                            <p className="font-medium text-gray-700">{agent.lieu_naissance}</p>
-                          </div>
-                        )}
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
-                            <Heart className="h-3 w-3" />
-                            Situation matrimoniale
-                          </p>
-                          <p className="font-medium text-gray-700">
-                            {getSituationMatrimonialeLabel(agent.situation_matrimoniale)}
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            Nombre d'enfants
-                          </p>
-                          <p className="font-medium text-gray-700">{agent.nombre_enfants || 0}</p>
-                        </div>
-                        {agent.adresse_actuelle && (
-                          <div className="space-y-1 md:col-span-2">
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              Adresse actuelle
-                            </p>
-                            <p className="font-medium text-gray-700">{agent.adresse_actuelle}</p>
+                            <p className="text-white font-medium">{agent.lieu_naissance}</p>
                           </div>
                         )}
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Informations professionnelles */}
-                  <Card>
+                  {/* Situation familiale */}
+                  <Card className="bg-black/20 backdrop-blur-xl border-white/10">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-teal-600" />
-                        Informations Professionnelles
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Heart className="h-5 w-5 text-pink-400" />
+                        Situation Familiale
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
-                            <Building2 className="h-3 w-3" />
-                            Ministère
+                        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                            <Heart className="h-3 w-3" />
+                            Situation matrimoniale
                           </p>
-                          <p className="font-semibold text-gray-900">{agent.ministere?.nom}</p>
-                          <Badge variant="secondary" className="mt-1">
-                            {agent.ministere?.sigle}
-                          </Badge>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Date de recrutement
+                          <p className="text-white font-semibold text-lg">
+                            {getSituationMatrimonialeLabel(agent.situation_matrimoniale)}
                           </p>
-                          <p className="font-medium text-gray-700">{formatDate(agent.date_recrutement)}</p>
                         </div>
-                        {agent.corps && (
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <GraduationCap className="h-3 w-3" />
-                              Corps
-                            </p>
-                            <p className="font-medium text-gray-700">{agent.corps.nom}</p>
-                          </div>
-                        )}
-                        {agent.grade && (
-                          <div className="space-y-1">
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
-                              <GraduationCap className="h-3 w-3" />
-                              Grade
-                            </p>
-                            <p className="font-medium text-gray-700">{agent.grade.nom}</p>
-                          </div>
-                        )}
+                        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            Nombre d'enfants
+                          </p>
+                          <p className="text-white font-bold text-2xl">{agent.nombre_enfants || 0}</p>
+                        </div>
                       </div>
+                      {agent.adresse_actuelle && (
+                        <div className="mt-4 bg-white/5 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            Adresse actuelle
+                          </p>
+                          <p className="text-white font-medium">{agent.adresse_actuelle}</p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
               )}
 
-              {activeSection === "finances" && (
+              {activeSection === "carriere" && (
                 <div className="space-y-6">
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                      Finances & Rappels
-                    </h2>
-                    <p className="text-gray-600">
-                      Consultez votre situation financière et les rappels de solde
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                      <Target className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-white">Carrière & Parcours</h2>
+                      <p className="text-gray-400">Votre historique professionnel complet</p>
+                    </div>
                   </div>
 
-                  {/* Résumé financier */}
+                  {/* Situation administrative actuelle */}
+                  <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <Building2 className="h-5 w-5 text-purple-400" />
+                        Situation Administrative Actuelle
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white/10 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-purple-300 mb-1 flex items-center gap-1">
+                            <Landmark className="h-3 w-3" />
+                            Ministère de tutelle
+                          </p>
+                          <p className="text-white font-bold text-lg">{agent.ministere?.nom}</p>
+                          <Badge className="mt-2 bg-purple-500/30 text-purple-200 border-purple-400/50">
+                            {agent.ministere?.sigle}
+                          </Badge>
+                        </div>
+                        {agent.corps && (
+                          <div className="bg-white/10 rounded-lg p-4 border border-white/10">
+                            <p className="text-xs text-purple-300 mb-1 flex items-center gap-1">
+                              <GraduationCap className="h-3 w-3" />
+                              Corps
+                            </p>
+                            <p className="text-white font-semibold text-lg">{agent.corps.nom}</p>
+                            {agent.corps.code && (
+                              <p className="text-xs text-gray-400 mt-1 font-mono">{agent.corps.code}</p>
+                            )}
+                          </div>
+                        )}
+                        {agent.grade && (
+                          <div className="bg-white/10 rounded-lg p-4 border border-white/10">
+                            <p className="text-xs text-purple-300 mb-1 flex items-center gap-1">
+                              <Award className="h-3 w-3" />
+                              Grade
+                            </p>
+                            <p className="text-white font-semibold text-lg">{agent.grade.nom}</p>
+                            {agent.grade.code && (
+                              <p className="text-xs text-gray-400 mt-1 font-mono">{agent.grade.code}</p>
+                            )}
+                          </div>
+                        )}
+                        {agent.lieu_affectation_actuel && (
+                          <div className="bg-white/10 rounded-lg p-4 border border-white/10">
+                            <p className="text-xs text-purple-300 mb-1 flex items-center gap-1">
+                              <MapPinned className="h-3 w-3" />
+                              Lieu d'affectation actuel
+                            </p>
+                            <p className="text-white font-semibold text-lg">{agent.lieu_affectation_actuel}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {agent.etablissement_affectation && (
+                        <div className="bg-white/10 rounded-lg p-4 border border-white/10">
+                          <p className="text-xs text-purple-300 mb-1 flex items-center gap-1">
+                            <Building2 className="h-3 w-3" />
+                            Établissement / Direction provinciale
+                          </p>
+                          <p className="text-white font-semibold">{agent.etablissement_affectation}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Timeline de carrière complète */}
+                  <Card className="bg-black/20 backdrop-blur-xl border-white/10">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <CalendarDays className="h-5 w-5 text-blue-400" />
+                        Timeline de Carrière Complète
+                      </CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Historique chronologique de votre parcours professionnel
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {/* Création d'une timeline visuelle */}
+                        {[
+                          { date: agent.date_recrutement, label: "Date de recrutement", icon: Briefcase, color: "blue" },
+                          { date: agent.date_prise_service, label: "Date de prise de service", icon: CalendarDays, color: "green" },
+                          { date: agent.date_integration, label: "Date d'intégration", icon: School, color: "purple" },
+                          { date: agent.date_titularisation, label: "Date de titularisation", icon: Award, color: "emerald" },
+                          { date: agent.date_reprise_service, label: "Date de reprise de service", icon: CalendarDays, color: "cyan" },
+                          { date: agent.date_reclassement, label: "Date de reclassement", icon: TrendingUp, color: "orange" },
+                          { date: agent.date_mise_retraite, label: "Date de mise en retraite", icon: Timer, color: "red" },
+                        ].filter(item => item.date).map((item, index) => {
+                          const Icon = item.icon;
+                          return (
+                            <div key={index} className="flex items-start gap-4">
+                              <div className={`p-3 bg-${item.color}-500/20 rounded-lg border border-${item.color}-500/30 flex-shrink-0`}>
+                                <Icon className={`h-5 w-5 text-${item.color}-400`} />
+                              </div>
+                              <div className="flex-1 bg-white/5 rounded-lg p-4 border border-white/10">
+                                <p className="text-xs text-gray-400 mb-1">{item.label}</p>
+                                <p className="text-white font-bold text-lg">{formatDate(item.date)}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Si aucune date n'est disponible */}
+                        {![agent.date_recrutement, agent.date_prise_service, agent.date_integration, agent.date_titularisation, agent.date_reprise_service, agent.date_reclassement, agent.date_mise_retraite].some(d => d) && (
+                          <div className="text-center py-12">
+                            <CalendarDays className="h-16 w-16 mx-auto mb-4 text-gray-600 opacity-50" />
+                            <p className="text-gray-400">Aucune date de carrière enregistrée</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Statistiques de carrière */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 backdrop-blur-sm">
+                      <CardHeader className="pb-3">
+                        <div className="p-2 bg-blue-500/20 rounded-lg w-fit">
+                          <Clock className="h-5 w-5 text-blue-400" />
+                        </div>
+                        <CardDescription className="text-xs text-blue-300 mt-2">Ancienneté totale</CardDescription>
+                        <CardTitle className="text-3xl font-bold text-white">
+                          {stats.anciennete} ans
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+
+                    {stats.age && (
+                      <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20 backdrop-blur-sm">
+                        <CardHeader className="pb-3">
+                          <div className="p-2 bg-purple-500/20 rounded-lg w-fit">
+                            <User className="h-5 w-5 text-purple-400" />
+                          </div>
+                          <CardDescription className="text-xs text-purple-300 mt-2">Âge actuel</CardDescription>
+                          <CardTitle className="text-3xl font-bold text-white">
+                            {stats.age} ans
+                          </CardTitle>
+                        </CardHeader>
+                      </Card>
+                    )}
+
+                    {stats.anneesJusquaRetraite !== null && (
+                      <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20 backdrop-blur-sm">
+                        <CardHeader className="pb-3">
+                          <div className="p-2 bg-orange-500/20 rounded-lg w-fit">
+                            <Timer className="h-5 w-5 text-orange-400" />
+                          </div>
+                          <CardDescription className="text-xs text-orange-300 mt-2">Années avant retraite</CardDescription>
+                          <CardTitle className="text-3xl font-bold text-white">
+                            {stats.anneesJusquaRetraite} ans
+                          </CardTitle>
+                        </CardHeader>
+                      </Card>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeSection === "finances" && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl">
+                      <Wallet className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-white">Finances & Rappels</h2>
+                      <p className="text-gray-400">Situation financière et rappels de solde</p>
+                    </div>
+                  </div>
+
+                  {/* Rémunération mensuelle */}
                   {agent.informations_financieres && (
-                    <Card>
+                    <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 backdrop-blur-sm">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <DollarSign className="h-5 w-5 text-emerald-600" />
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <DollarSign className="h-5 w-5 text-green-400" />
                           Rémunération Mensuelle
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                            <p className="text-sm text-blue-600 mb-1">Salaire de base</p>
-                            <p className="text-2xl font-bold text-blue-900">
+                          <div className="bg-white/10 rounded-lg p-4 border border-white/10">
+                            <p className="text-xs text-green-300 mb-1">Salaire de base</p>
+                            <p className="text-2xl font-bold text-white">
                               {formatCurrency(agent.informations_financieres.salaire_base)}
                             </p>
                           </div>
-                          <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-100">
-                            <p className="text-sm text-emerald-600 mb-1">Indemnité logement</p>
-                            <p className="text-2xl font-bold text-emerald-900">
+                          <div className="bg-white/10 rounded-lg p-4 border border-white/10">
+                            <p className="text-xs text-green-300 mb-1">Indemnité logement</p>
+                            <p className="text-2xl font-bold text-white">
                               {formatCurrency(agent.informations_financieres.indemnite_logement)}
                             </p>
                           </div>
-                          <div className="bg-purple-50 rounded-lg p-4 border border-purple-100">
-                            <p className="text-sm text-purple-600 mb-1">Indemnité transport</p>
-                            <p className="text-2xl font-bold text-purple-900">
+                          <div className="bg-white/10 rounded-lg p-4 border border-white/10">
+                            <p className="text-xs text-green-300 mb-1">Indemnité transport</p>
+                            <p className="text-2xl font-bold text-white">
                               {formatCurrency(agent.informations_financieres.indemnite_transport)}
                             </p>
                           </div>
                         </div>
 
-                        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg p-6 text-white">
+                        <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl p-6 shadow-lg">
                           <div className="flex items-center justify-between mb-4">
-                            <p className="text-sm opacity-90">Net à payer mensuel</p>
+                            <p className="text-sm text-white/80">Net à payer mensuel</p>
                             <Badge className="bg-white/20 text-white border-0">
                               Après retenues
                             </Badge>
                           </div>
-                          <p className="text-4xl font-bold mb-2">
+                          <p className="text-5xl font-bold text-white mb-2">
                             {formatCurrency(agent.informations_financieres.net_a_payer)}
                           </p>
-                          <p className="text-xs opacity-75">
-                            Total brut: {formatCurrency(agent.informations_financieres.total_brut)} · 
-                            Retenues: {formatCurrency(agent.informations_financieres.total_retenues)}
-                          </p>
+                          <div className="flex items-center justify-between text-sm text-white/70">
+                            <span>Brut: {formatCurrency(agent.informations_financieres.total_brut)}</span>
+                            <span>Retenues: {formatCurrency(agent.informations_financieres.total_retenues)}</span>
+                          </div>
                         </div>
 
                         {(agent.informations_financieres.banque || agent.informations_financieres.numero_compte) && (
                           <>
-                            <Separator />
+                            <Separator className="bg-white/10" />
                             <div>
-                              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                              <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
                                 <CreditCard className="h-4 w-4" />
                                 Coordonnées bancaires
                               </h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {agent.informations_financieres.banque && (
-                                  <div className="bg-gray-50 rounded-lg p-3">
-                                    <p className="text-xs text-gray-500 mb-1">Banque</p>
-                                    <p className="font-semibold text-gray-900">
+                                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                    <p className="text-xs text-gray-400 mb-1">Banque</p>
+                                    <p className="font-semibold text-white">
                                       {agent.informations_financieres.banque}
                                     </p>
                                   </div>
                                 )}
                                 {agent.informations_financieres.numero_compte && (
-                                  <div className="bg-gray-50 rounded-lg p-3">
-                                    <p className="text-xs text-gray-500 mb-1">Numéro de compte</p>
-                                    <p className="font-mono text-sm font-semibold text-gray-900">
+                                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                    <p className="text-xs text-gray-400 mb-1">Numéro de compte</p>
+                                    <p className="font-mono text-sm font-semibold text-white">
                                       {agent.informations_financieres.numero_compte}
                                     </p>
                                   </div>
@@ -673,53 +977,53 @@ export default function AgentDashboard() {
 
                   {/* Rappels de solde */}
                   {rappelsData && (
-                    <Card>
+                    <Card className="bg-black/20 backdrop-blur-xl border-white/10">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Wallet className="h-5 w-5 text-yellow-600" />
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <Wallet className="h-5 w-5 text-yellow-400" />
                           Rappels de Solde
                         </CardTitle>
-                        <CardDescription>
+                        <CardDescription className="text-gray-400">
                           Historique de vos rappels et arriérés de salaire
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
                         {/* Résumé des rappels */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                          <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg p-4 border border-blue-500/30">
                             <div className="flex items-center gap-2 mb-2">
-                              <TrendingUp className="h-4 w-4 text-blue-600" />
-                              <p className="text-sm text-blue-600">Total rappels</p>
+                              <TrendingUp className="h-5 w-5 text-blue-400" />
+                              <p className="text-xs text-blue-300">Total rappels</p>
                             </div>
-                            <p className="text-2xl font-bold text-blue-900">
+                            <p className="text-3xl font-bold text-white">
                               {formatCurrency(rappelsData.total_rappel)}
                             </p>
                           </div>
 
-                          <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-100">
+                          <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg p-4 border border-green-500/30">
                             <div className="flex items-center gap-2 mb-2">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                              <p className="text-sm text-emerald-600">Déjà perçu</p>
+                              <CheckCircle2 className="h-5 w-5 text-green-400" />
+                              <p className="text-xs text-green-300">Déjà perçu</p>
                             </div>
-                            <p className="text-2xl font-bold text-emerald-900">
+                            <p className="text-3xl font-bold text-white">
                               {formatCurrency(rappelsData.total_percu)}
                             </p>
-                            <p className="text-xs text-emerald-700 mt-1">
+                            <p className="text-xs text-green-400 mt-1">
                               {rappelsData.total_rappel > 0 
                                 ? `${Math.round((rappelsData.total_percu / rappelsData.total_rappel) * 100)}% perçu`
                                 : "0% perçu"}
                             </p>
                           </div>
 
-                          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+                          <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-lg p-4 border border-yellow-500/30">
                             <div className="flex items-center gap-2 mb-2">
-                              <Clock className="h-4 w-4 text-yellow-600" />
-                              <p className="text-sm text-yellow-600">Reste à payer</p>
+                              <Clock className="h-5 w-5 text-yellow-400" />
+                              <p className="text-xs text-yellow-300">Reste à payer</p>
                             </div>
-                            <p className="text-2xl font-bold text-yellow-900">
+                            <p className="text-3xl font-bold text-white">
                               {formatCurrency(rappelsData.solde_restant)}
                             </p>
-                            <p className="text-xs text-yellow-700 mt-1">
+                            <p className="text-xs text-yellow-400 mt-1">
                               {rappelsData.rappels.filter(r => r.statut !== "paye").length} en cours
                             </p>
                           </div>
@@ -728,60 +1032,63 @@ export default function AgentDashboard() {
                         {/* Liste des rappels */}
                         {rappelsData.rappels.length > 0 ? (
                           <div className="space-y-3">
-                            <h4 className="font-semibold text-gray-900">Détail des rappels</h4>
+                            <h4 className="font-semibold text-white flex items-center gap-2">
+                              <FileText className="h-4 w-4" />
+                              Détail des rappels
+                            </h4>
                             {rappelsData.rappels.map((rappel) => (
-                              <div key={rappel.id} className="border border-gray-200 rounded-lg p-4 hover:border-emerald-300 transition-colors">
-                                <div className="flex items-start justify-between mb-3">
+                              <div key={rappel.id} className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-purple-500/50 transition-all">
+                                <div className="flex items-start justify-between mb-4">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <h5 className="font-semibold text-gray-900">{getRappelLabel(rappel.type_rappel)}</h5>
+                                      <h5 className="font-bold text-white text-lg">{getRappelLabel(rappel.type_rappel)}</h5>
                                       <Badge className={getStatutRappelColor(rappel.statut || "EN_ATTENTE")}>
                                         {getStatutRappelLabel(rappel.statut || "EN_ATTENTE")}
                                       </Badge>
                                     </div>
-                                    <p className="text-sm text-gray-600">{rappel.motif || "Aucun motif spécifié"}</p>
+                                    <p className="text-sm text-gray-400">{rappel.motif || "Aucun motif spécifié"}</p>
                                   </div>
                                   <div className="text-right">
-                                    <p className="text-lg font-bold text-gray-900">
+                                    <p className="text-2xl font-bold text-white">
                                       {formatCurrency(Number(rappel.montant_total))}
                                     </p>
                                     <p className="text-xs text-gray-500">Montant total</p>
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                                  <div>
-                                    <p className="text-gray-500 text-xs mb-1">Période</p>
-                                    <p className="font-medium text-gray-900">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                    <p className="text-xs text-gray-400 mb-1">Période</p>
+                                    <p className="font-medium text-white text-sm">
                                       {new Date(rappel.periode_debut).toLocaleDateString("fr-FR", { month: "short", year: "numeric" })}
                                       {" - "}
                                       {new Date(rappel.periode_fin).toLocaleDateString("fr-FR", { month: "short", year: "numeric" })}
                                     </p>
                                   </div>
-                                  <div>
-                                    <p className="text-gray-500 text-xs mb-1">Perçu</p>
-                                    <p className="font-medium text-emerald-600">
+                                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                    <p className="text-xs text-gray-400 mb-1">Perçu</p>
+                                    <p className="font-bold text-green-400">
                                       {formatCurrency(Number(rappel.montant_paye || 0))}
                                     </p>
                                   </div>
-                                  <div>
-                                    <p className="text-gray-500 text-xs mb-1">Reste</p>
-                                    <p className="font-medium text-yellow-600">
+                                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                    <p className="text-xs text-gray-400 mb-1">Reste</p>
+                                    <p className="font-bold text-yellow-400">
                                       {formatCurrency(Number(rappel.montant_restant))}
                                     </p>
                                   </div>
-                                  <div>
-                                    <p className="text-gray-500 text-xs mb-1">Créé le</p>
-                                    <p className="font-medium text-gray-700">
+                                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                                    <p className="text-xs text-gray-400 mb-1">Créé le</p>
+                                    <p className="font-medium text-white text-sm">
                                       {formatDate(rappel.created_at || undefined)}
                                     </p>
                                   </div>
                                 </div>
 
                                 {rappel.date_paiement_effectif && (
-                                  <div className="mt-3 pt-3 border-t border-gray-100">
-                                    <p className="text-xs text-gray-500">
-                                      <CheckCircle2 className="h-3 w-3 inline mr-1" />
+                                  <div className="mt-3 pt-3 border-t border-white/10">
+                                    <p className="text-xs text-green-400 flex items-center gap-1">
+                                      <CheckCircle2 className="h-3 w-3" />
                                       Payé le {formatDate(rappel.date_paiement_effectif)}
                                     </p>
                                   </div>
@@ -790,9 +1097,9 @@ export default function AgentDashboard() {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center py-8 text-gray-500">
-                            <Wallet className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                            <p>Aucun rappel de solde enregistré</p>
+                          <div className="text-center py-12">
+                            <Wallet className="h-16 w-16 mx-auto mb-4 text-gray-600 opacity-50" />
+                            <p className="text-gray-400 text-lg">Aucun rappel de solde enregistré</p>
                           </div>
                         )}
                       </CardContent>
@@ -803,27 +1110,36 @@ export default function AgentDashboard() {
 
               {activeSection === "documents" && (
                 <div className="space-y-6">
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                      Documents
-                    </h2>
-                    <p className="text-gray-600">
-                      Gérez vos documents administratifs
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+                      <FileText className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-white">Documents</h2>
+                      <p className="text-gray-400">Gestion de vos documents administratifs</p>
+                    </div>
                   </div>
 
-                  <Card>
+                  <Card className="bg-black/20 backdrop-blur-xl border-white/10">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-blue-600" />
+                      <CardTitle className="flex items-center gap-2 text-white">
+                        <FileText className="h-5 w-5 text-blue-400" />
                         Documents administratifs
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-center py-12 text-gray-500">
-                        <FileText className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium mb-2">Fonctionnalité en cours de développement</p>
-                        <p className="text-sm">La gestion des documents sera bientôt disponible</p>
+                      <div className="text-center py-16">
+                        <div className="relative inline-block mb-6">
+                          <FileText className="h-24 w-24 text-gray-600 opacity-30" />
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full p-2">
+                            <Star className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                        <p className="text-xl font-semibold text-white mb-2">Fonctionnalité en cours de développement</p>
+                        <p className="text-gray-400">La gestion des documents sera bientôt disponible</p>
+                        <Button className="mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" disabled>
+                          Bientôt disponible
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -832,24 +1148,25 @@ export default function AgentDashboard() {
 
               {activeSection === "messages" && (
                 <div className="space-y-6">
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                      Messagerie
-                    </h2>
-                    <p className="text-gray-600">
-                      Alertes et notifications de la DCRH
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+                      <MessageSquare className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-white">Messagerie</h2>
+                      <p className="text-gray-400">Alertes et notifications de la DCRH</p>
+                    </div>
                   </div>
 
-                  <Card>
+                  <Card className="bg-black/20 backdrop-blur-xl border-white/10">
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-2">
-                          <Bell className="h-5 w-5 text-purple-600" />
+                        <CardTitle className="flex items-center gap-2 text-white">
+                          <Bell className="h-5 w-5 text-purple-400" />
                           Messages reçus
                         </CardTitle>
                         {unreadCount > 0 && (
-                          <Badge className="bg-red-500 text-white">
+                          <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 px-3 py-1 animate-pulse">
                             {unreadCount} non lu{unreadCount > 1 ? "s" : ""}
                           </Badge>
                         )}
@@ -861,29 +1178,30 @@ export default function AgentDashboard() {
                           {messages.map((message) => (
                             <div 
                               key={message.id} 
-                              className={`border rounded-lg p-4 transition-all ${
+                              className={`border rounded-xl p-5 transition-all ${
                                 !message.lu 
-                                  ? "border-purple-200 bg-purple-50" 
-                                  : "border-gray-200 bg-white"
+                                  ? "border-purple-500/50 bg-gradient-to-br from-purple-500/10 to-pink-500/10 shadow-lg shadow-purple-500/20" 
+                                  : "border-white/10 bg-white/5"
                               }`}
                             >
-                              <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h5 className="font-semibold text-gray-900">{message.sujet}</h5>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h5 className="font-bold text-white text-lg">{message.sujet}</h5>
                                     {!message.lu && (
-                                      <Badge className="bg-purple-500 text-white text-xs">
+                                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs border-0 animate-pulse">
                                         Nouveau
                                       </Badge>
                                     )}
-                                    <Badge variant="outline" className={getPrioriteColor(message.priorite || "normale")}>
-                                      {message.priorite === "haute" && "Priorité haute"}
-                                      {message.priorite === "moyenne" && "Priorité moyenne"}
-                                      {message.priorite === "basse" && "Priorité basse"}
+                                    <Badge variant="outline" className={`${getPrioriteColor(message.priorite || "normale")} border-current`}>
+                                      {message.priorite === "haute" && "🔥 Priorité haute"}
+                                      {message.priorite === "moyenne" && "⚠️ Priorité moyenne"}
+                                      {message.priorite === "basse" && "ℹ️ Priorité basse"}
                                     </Badge>
                                   </div>
                                   {message.expediteur && (
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-gray-400 flex items-center gap-1">
+                                      <User className="h-3 w-3" />
                                       De: {message.expediteur.prenoms} {message.expediteur.nom} (DCRH)
                                     </p>
                                   )}
@@ -893,16 +1211,18 @@ export default function AgentDashboard() {
                                 </p>
                               </div>
 
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap mb-3">
-                                {message.contenu}
-                              </p>
+                              <div className="bg-white/5 rounded-lg p-4 mb-3 border border-white/10">
+                                <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                  {message.contenu}
+                                </p>
+                              </div>
 
                               {!message.lu && (
                                 <Button 
                                   size="sm" 
                                   variant="outline"
                                   onClick={() => handleMarkAsRead(message.id)}
-                                  className="text-purple-600 border-purple-300 hover:bg-purple-50"
+                                  className="border-purple-500/50 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300"
                                 >
                                   <CheckCircle2 className="h-3 w-3 mr-1" />
                                   Marquer comme lu
@@ -912,10 +1232,15 @@ export default function AgentDashboard() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-12 text-gray-500">
-                          <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                          <p className="text-lg font-medium mb-2">Aucun message</p>
-                          <p className="text-sm">Vous n'avez pas encore reçu de message de la DCRH</p>
+                        <div className="text-center py-16">
+                          <div className="relative inline-block mb-6">
+                            <MessageSquare className="h-24 w-24 text-gray-600 opacity-30" />
+                            <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full p-2">
+                              <Bell className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-xl font-semibold text-white mb-2">Aucun message</p>
+                          <p className="text-gray-400">Vous n'avez pas encore reçu de message de la DCRH</p>
                         </div>
                       )}
                     </CardContent>
@@ -926,18 +1251,20 @@ export default function AgentDashboard() {
           </main>
         </div>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-200">
+        {/* Footer Premium */}
+        <footer className="bg-black/30 backdrop-blur-xl border-t border-white/10">
           <div className="px-6 py-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-400">
                 © 2026 USSALA - République Gabonaise
               </p>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-gray-500">Connexion sécurisée</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-gray-400">Connexion sécurisée</span>
                 </div>
+                <Separator orientation="vertical" className="h-4 bg-white/20" />
+                <span className="text-xs text-gray-400">Powered by USSALA Pro</span>
               </div>
             </div>
           </div>
