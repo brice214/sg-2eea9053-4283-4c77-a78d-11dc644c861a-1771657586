@@ -129,6 +129,30 @@ export default function Dashboard() {
                 </Card>
               </Link>
 
+              {/* Module DCRH - Visible uniquement pour rh_central */}
+              {userProfile?.role === "rh_central" && (
+                <Link href="/dashboard/dcrh">
+                  <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer border-blue-200 hover:border-blue-400 bg-gradient-to-br from-white to-blue-50">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-xl">Tableau de bord DCRH</CardTitle>
+                        <UserCheck className="h-8 w-8 text-blue-600" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-base">
+                        Validation et supervision des dossiers administratifs
+                      </CardDescription>
+                      <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                        <li>• Valider les dossiers</li>
+                        <li>• Superviser les agents</li>
+                        <li>• Gérer les promotions</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )}
+
               {/* Module Situations administratives (à venir) */}
               <Card className="opacity-50 cursor-not-allowed border-blue-200 bg-gradient-to-br from-white to-blue-50">
                 <CardHeader>
