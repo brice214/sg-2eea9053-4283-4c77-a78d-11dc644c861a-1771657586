@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -23,10 +23,14 @@ export type Database = {
           corps_id: string
           created_at: string | null
           date_decision_recrutement: string | null
+          date_integration: string | null
+          date_mise_en_retraite: string | null
           date_naissance: string
           date_premiere_nomination: string | null
           date_prise_service: string | null
+          date_reclassement: string | null
           date_recrutement: string
+          date_reprise_service: string | null
           date_titularisation: string | null
           date_validation: string | null
           diplome_principal: string
@@ -37,8 +41,10 @@ export type Database = {
           echelon_id: string | null
           email: string | null
           etablissement: string | null
+          etablissement_affectation: string | null
           grade_id: string
           id: string
+          lieu_affectation_actuel: string | null
           lieu_naissance: string
           matricule: string
           ministere_id: string | null
@@ -71,10 +77,14 @@ export type Database = {
           corps_id: string
           created_at?: string | null
           date_decision_recrutement?: string | null
+          date_integration?: string | null
+          date_mise_en_retraite?: string | null
           date_naissance: string
           date_premiere_nomination?: string | null
           date_prise_service?: string | null
+          date_reclassement?: string | null
           date_recrutement: string
+          date_reprise_service?: string | null
           date_titularisation?: string | null
           date_validation?: string | null
           diplome_principal: string
@@ -85,8 +95,10 @@ export type Database = {
           echelon_id?: string | null
           email?: string | null
           etablissement?: string | null
+          etablissement_affectation?: string | null
           grade_id: string
           id?: string
+          lieu_affectation_actuel?: string | null
           lieu_naissance: string
           matricule: string
           ministere_id?: string | null
@@ -119,10 +131,14 @@ export type Database = {
           corps_id?: string
           created_at?: string | null
           date_decision_recrutement?: string | null
+          date_integration?: string | null
+          date_mise_en_retraite?: string | null
           date_naissance?: string
           date_premiere_nomination?: string | null
           date_prise_service?: string | null
+          date_reclassement?: string | null
           date_recrutement?: string
+          date_reprise_service?: string | null
           date_titularisation?: string | null
           date_validation?: string | null
           diplome_principal?: string
@@ -133,8 +149,10 @@ export type Database = {
           echelon_id?: string | null
           email?: string | null
           etablissement?: string | null
+          etablissement_affectation?: string | null
           grade_id?: string
           id?: string
+          lieu_affectation_actuel?: string | null
           lieu_naissance?: string
           matricule?: string
           ministere_id?: string | null
