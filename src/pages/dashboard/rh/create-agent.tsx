@@ -32,7 +32,7 @@ export default function CreateAgent() {
   const [formData, setFormData] = useState<Partial<AgentFormData>>({
     sexe: "M",
     nationalite: "Gabonaise",
-    situation_matrimoniale: "CELIBATAIRE",
+    situation_matrimoniale: "Célibataire",
     nombre_enfants: 0,
     mode_recrutement: "CONCOURS",
     documents: []
@@ -322,10 +322,10 @@ export default function CreateAgent() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="CELIBATAIRE">Célibataire</SelectItem>
-                        <SelectItem value="MARIE">Marié(e)</SelectItem>
-                        <SelectItem value="DIVORCE">Divorcé(e)</SelectItem>
-                        <SelectItem value="VEUF">Veuf(ve)</SelectItem>
+                        <SelectItem value="Célibataire">Célibataire</SelectItem>
+                        <SelectItem value="Marié(e)">Marié(e)</SelectItem>
+                        <SelectItem value="Divorcé(e)">Divorcé(e)</SelectItem>
+                        <SelectItem value="Veuf(ve)">Veuf(ve)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -528,10 +528,10 @@ export default function CreateAgent() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="CONCOURS">Concours</SelectItem>
-                        <SelectItem value="CONTRACTUEL">Contractuel</SelectItem>
-                        <SelectItem value="DETACHEMENT">Détachement</SelectItem>
-                        <SelectItem value="MUTATION">Mutation</SelectItem>
+                        <SelectItem value="Concours">Concours</SelectItem>
+                        <SelectItem value="Contractuel">Contractuel</SelectItem>
+                        <SelectItem value="Détachement">Détachement</SelectItem>
+                        <SelectItem value="Mutation">Mutation</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
