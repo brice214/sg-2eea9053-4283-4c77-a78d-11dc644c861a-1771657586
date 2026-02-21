@@ -243,9 +243,9 @@ export default function AdminDashboard() {
                 <Shield className="h-8 w-8 text-green-600" />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Administration Ministère</h1>
-                  {userProfile?.ministeres && (
+                  {userProfile?.ministere && (
                     <p className="text-sm text-gray-600">
-                      {userProfile.ministeres.nom} ({userProfile.ministeres.sigle})
+                      {userProfile.ministere.nom_complet} ({userProfile.ministere.sigle})
                     </p>
                   )}
                 </div>
