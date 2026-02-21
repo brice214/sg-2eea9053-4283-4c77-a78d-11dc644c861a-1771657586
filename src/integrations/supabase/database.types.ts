@@ -262,6 +262,61 @@ export type Database = {
         }
         Relationships: []
       }
+      dcrh_locks: {
+        Row: {
+          actif: boolean | null
+          ancien_dcrh_id: string
+          created_at: string | null
+          date_verrouillage: string | null
+          id: string
+          ministere_id: string
+          raison: string | null
+          verrouille_par: string
+        }
+        Insert: {
+          actif?: boolean | null
+          ancien_dcrh_id: string
+          created_at?: string | null
+          date_verrouillage?: string | null
+          id?: string
+          ministere_id: string
+          raison?: string | null
+          verrouille_par: string
+        }
+        Update: {
+          actif?: boolean | null
+          ancien_dcrh_id?: string
+          created_at?: string | null
+          date_verrouillage?: string | null
+          id?: string
+          ministere_id?: string
+          raison?: string | null
+          verrouille_par?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dcrh_locks_ancien_dcrh_id_fkey"
+            columns: ["ancien_dcrh_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dcrh_locks_ministere_id_fkey"
+            columns: ["ministere_id"]
+            isOneToOne: false
+            referencedRelation: "ministeres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dcrh_locks_verrouille_par_fkey"
+            columns: ["verrouille_par"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       directions: {
         Row: {
           actif: boolean | null
