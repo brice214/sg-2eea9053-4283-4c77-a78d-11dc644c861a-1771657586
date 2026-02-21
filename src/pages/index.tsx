@@ -1,12 +1,17 @@
-import React from 'react'
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { Loader2 } from "lucide-react";
 
-export default function Home() {
+export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push("/auth/login");
+  }, [router]);
+
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-foreground">Hello World</h1>
-        <p className="text-lg text-muted-foreground">This is going to be your softgen app, start by describing your project.</p>
-      </div>
-    </main>
-  )
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-yellow-50">
+      <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+    </div>
+  );
 }
