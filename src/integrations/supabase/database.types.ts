@@ -650,6 +650,83 @@ export type Database = {
           },
         ]
       }
+      informations_financieres: {
+        Row: {
+          agent_id: string
+          autres_primes: number | null
+          autres_retenues: number | null
+          banque: string | null
+          cotisation_cnamgs: number | null
+          cotisation_cnss: number | null
+          created_at: string | null
+          derniere_mise_a_jour: string | null
+          id: string
+          impot_sur_revenu: number | null
+          indemnite_fonction: number | null
+          indemnite_logement: number | null
+          indemnite_transport: number | null
+          net_a_payer: number | null
+          numero_compte: string | null
+          prime_rendement: number | null
+          salaire_base: number
+          total_brut: number | null
+          total_retenues: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          autres_primes?: number | null
+          autres_retenues?: number | null
+          banque?: string | null
+          cotisation_cnamgs?: number | null
+          cotisation_cnss?: number | null
+          created_at?: string | null
+          derniere_mise_a_jour?: string | null
+          id?: string
+          impot_sur_revenu?: number | null
+          indemnite_fonction?: number | null
+          indemnite_logement?: number | null
+          indemnite_transport?: number | null
+          net_a_payer?: number | null
+          numero_compte?: string | null
+          prime_rendement?: number | null
+          salaire_base?: number
+          total_brut?: number | null
+          total_retenues?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          autres_primes?: number | null
+          autres_retenues?: number | null
+          banque?: string | null
+          cotisation_cnamgs?: number | null
+          cotisation_cnss?: number | null
+          created_at?: string | null
+          derniere_mise_a_jour?: string | null
+          id?: string
+          impot_sur_revenu?: number | null
+          indemnite_fonction?: number | null
+          indemnite_logement?: number | null
+          indemnite_transport?: number | null
+          net_a_payer?: number | null
+          numero_compte?: string | null
+          prime_rendement?: number | null
+          salaire_base?: number
+          total_brut?: number | null
+          total_retenues?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "informations_financieres_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ministeres: {
         Row: {
           actif: boolean | null
