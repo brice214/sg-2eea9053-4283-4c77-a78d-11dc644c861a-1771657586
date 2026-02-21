@@ -433,5 +433,123 @@ export const agentService = {
       .order("ordre_affichage");
 
     return { data: data || [], error };
+  },
+
+  getAgentsByStatus: async (ministereId: string, statut: string) => {
+    try {
+      const { data: agents, error } = await supabase
+        .from("agents")
+        .select(`
+          id,
+          matricule,
+          nom,
+          prenoms,
+          statut,
+          date_recrutement,
+          created_at,
+          corps:corps_id (nom),
+          grade:grade_id (nom),
+          echelon:echelon_id (numero),
+          ministere:ministere_id (nom, sigle)
+        `)
+        .eq("ministere_id", ministereId)
+        .eq("statut", statut)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching agents by status:", error);
+        return { agents: null, error: error.message };
+      }
+
+      return { agents, error: null };
+    } catch (error) {
+      console.error("Error fetching agents by status:", error);
+      return { agents: null, error: "Failed to fetch agents" };
+    }
+  },
+
+  validateAgent: async (agentId: string, validateurId: string, commentaire?: string) => {
+    try {
+      const { data: agent, error: updateError } = await supabase
+        .from("agents")
+        .update({
+          statut: "TITULAIRE",
+          dossier_valide: true,
+          date_validation: new Date().toISOString(),
+          validateur_id: validateurId,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", agentId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Error validating agent:", updateError);
+        return { success: false, error: updateError.message };
+      }
+
+      const { error: histError } = await supabase
+        .from("historique_validations")
+        .insert({
+          agent_id: agentId,
+          action: "validation",
+          entite: "agent",
+          entite_id: agentId,
+          effectue_par: validateurId,
+          details: { statut_precedent: "EN_ATTENTE_VALIDATION", nouveau_statut: "TITULAIRE" },
+          commentaire: commentaire || "Dossier validé par la DCRH"
+        });
+
+      if (histError) {
+        console.error("Error creating validation history:", histError);
+      }
+
+      return { success: true, agent, error: null };
+    } catch (error) {
+      console.error("Error validating agent:", error);
+      return { success: false, error: "Failed to validate agent" };
+    }
+  },
+
+  rejectAgent: async (agentId: string, validateurId: string, motif: string) => {
+    try {
+      const { data: agent, error: updateError } = await supabase
+        .from("agents")
+        .update({
+          statut: "STAGIAIRE",
+          dossier_valide: false,
+          observations: motif,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", agentId)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Error rejecting agent:", updateError);
+        return { success: false, error: updateError.message };
+      }
+
+      const { error: histError } = await supabase
+        .from("historique_validations")
+        .insert({
+          agent_id: agentId,
+          action: "rejet",
+          entite: "agent",
+          entite_id: agentId,
+          effectue_par: validateurId,
+          details: { statut_precedent: "EN_ATTENTE_VALIDATION", nouveau_statut: "STAGIAIRE" },
+          commentaire: motif
+        });
+
+      if (histError) {
+        console.error("Error creating rejection history:", histError);
+      }
+
+      return { success: true, agent, error: null };
+    } catch (error) {
+      console.error("Error rejecting agent:", error);
+      return { success: false, error: "Failed to reject agent" };
+    }
   }
 };
