@@ -73,7 +73,7 @@ export interface AgentCompletProfile {
     net_a_payer: number;
     numero_compte?: string;
     banque?: string;
-  };
+  } | null;
 }
 
 export const agentDashboardService = {
@@ -89,7 +89,7 @@ export const agentDashboardService = {
           ministere:ministere_id (nom, sigle),
           corps:corps_id (nom, code),
           grade:grade_id (nom, code),
-          informations_financieres:informations_financieres_id (
+          informations_financieres (
             salaire_base,
             indemnite_logement,
             indemnite_transport,
@@ -108,7 +108,15 @@ export const agentDashboardService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data as any, error: null };
+      // Transformation pour gérer le tableau retourné par la relation inverse
+      const formattedData = {
+        ...data,
+        informations_financieres: Array.isArray(data.informations_financieres) 
+          ? data.informations_financieres[0] 
+          : data.informations_financieres
+      };
+
+      return { data: formattedData as AgentCompletProfile, error: null };
     } catch (error: any) {
       console.error("❌ Erreur getAgentCompletProfile:", error);
       return { data: null, error: error.message };

@@ -100,7 +100,7 @@ export default function AgentDashboard() {
     const totalRappels = rappels.reduce((sum, r) => sum + r.montant_total, 0);
     const totalPaye = rappels.reduce((sum, r) => sum + (r.montant_paye || 0), 0);
     const totalRestant = rappels.reduce((sum, r) => sum + (r.montant_restant || 0), 0);
-    const rappelsEnCours = rappels.filter(r => r.statut === "en_cours").length;
+    const rappelsEnCours = rappels.filter(r => r.statut === "EN_COURS").length;
 
     return { totalRappels, totalPaye, totalRestant, rappelsEnCours };
   };
@@ -125,6 +125,14 @@ export default function AgentDashboard() {
       currency: "XAF",
       minimumFractionDigits: 0
     }).format(amount);
+  };
+
+  const formatPeriod = (start: string, end: string) => {
+    const d1 = new Date(start);
+    const d2 = new Date(end);
+    const m1 = d1.toLocaleDateString("fr-FR", { month: "short", year: "numeric" });
+    const m2 = d2.toLocaleDateString("fr-FR", { month: "short", year: "numeric" });
+    return `${m1} - ${m2}`;
   };
 
   if (isLoading) {
@@ -750,20 +758,22 @@ export default function AgentDashboard() {
                                 <p className="text-sm text-gray-500">{rappel.motif || "Aucune description"}</p>
                               </div>
                               <Badge className={
-                                rappel.statut === "paye"
+                                rappel.statut === "PAYE"
                                   ? "bg-green-100 text-green-700 border-green-200"
-                                  : rappel.statut === "en_cours"
+                                  : rappel.statut === "EN_COURS"
                                   ? "bg-blue-100 text-blue-700 border-blue-200"
                                   : "bg-yellow-100 text-yellow-700 border-yellow-200"
                               }>
-                                {rappel.statut === "paye" ? "Payé" : rappel.statut === "en_cours" ? "En cours" : "En attente"}
+                                {rappel.statut === "PAYE" ? "Payé" : rappel.statut === "EN_COURS" ? "En cours" : "En attente"}
                               </Badge>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                               <div>
                                 <p className="text-gray-500">Période</p>
-                                <p className="font-semibold text-gray-800">{rappel.periode}</p>
+                                <p className="font-semibold text-gray-800">
+                                  {formatPeriod(rappel.periode_debut, rappel.periode_fin)}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-gray-500">Montant total</p>
@@ -861,7 +871,7 @@ export default function AgentDashboard() {
                               <div>
                                 <h4 className="font-semibold text-gray-800">{message.sujet}</h4>
                                 <p className="text-xs text-gray-500">
-                                  De: DCRH - {formatDate(message.date_envoi)}
+                                  De: DCRH - {formatDate(message.created_at)}
                                 </p>
                               </div>
                             </div>
@@ -870,11 +880,11 @@ export default function AgentDashboard() {
                               <Badge className={
                                 message.priorite === "haute"
                                   ? "bg-red-100 text-red-700 border-red-200"
-                                  : message.priorite === "moyenne"
-                                  ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-                                  : "bg-blue-100 text-blue-700 border-blue-200"
+                                  : message.priorite === "normale"
+                                  ? "bg-blue-100 text-blue-700 border-blue-200"
+                                  : "bg-gray-100 text-gray-700 border-gray-200"
                               }>
-                                {message.priorite === "haute" ? "Haute" : message.priorite === "moyenne" ? "Moyenne" : "Basse"}
+                                {message.priorite === "haute" ? "Haute" : message.priorite === "normale" ? "Normale" : "Basse"}
                               </Badge>
                               
                               {!message.lu && (
