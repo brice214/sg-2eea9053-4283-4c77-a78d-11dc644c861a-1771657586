@@ -11,6 +11,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     checkAuth();
@@ -26,6 +27,12 @@ export default function Dashboard() {
     const user = await authService.getCurrentUser();
     if (user) {
       setUserEmail(user.email);
+    }
+
+    // Récupérer le profil complet avec les informations du ministère
+    const { profile } = await authService.getUserProfile();
+    if (profile) {
+      setUserProfile(profile);
     }
 
     setLoading(false);
@@ -61,11 +68,23 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-600">
                   Plateforme de Gestion Administrative et Statutaire des Agents Publics
                 </p>
+                {userProfile?.ministere && (
+                  <p className="text-sm font-medium text-green-700 mt-1">
+                    {userProfile.ministere.nom} ({userProfile.ministere.sigle})
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900">{userEmail}</p>
                   <p className="text-xs text-gray-500">Connecté</p>
+                  {userProfile?.role && (
+                    <p className="text-xs text-blue-600 font-medium mt-1">
+                      {userProfile.role === "rh_ministere" && "RH Ministériel"}
+                      {userProfile.role === "rh_central" && "DCRH Central"}
+                      {userProfile.role === "admin" && "Administrateur"}
+                    </p>
+                  )}
                 </div>
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
