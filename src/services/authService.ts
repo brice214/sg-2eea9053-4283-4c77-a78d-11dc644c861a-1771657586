@@ -204,6 +204,7 @@ export const authService = {
 
       if (profileError) {
         console.error("❌ [getUserProfile] Profile error:", profileError);
+        console.error("❌ [getUserProfile] Profile error DETAILS:", JSON.stringify(profileError, null, 2));
         return { profile: null, error: { message: profileError.message } };
       }
 

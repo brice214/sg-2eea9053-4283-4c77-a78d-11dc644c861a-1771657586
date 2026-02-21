@@ -61,6 +61,7 @@ export default function CreateAgent() {
     
     if (profileError || !profile) {
       console.error("❌ [checkAuth] Profile error:", profileError);
+      console.error("❌ [checkAuth] Profile error DETAILS:", JSON.stringify(profileError, null, 2));
       setError("Impossible de récupérer votre profil utilisateur");
       setLoading(false);
       return;
