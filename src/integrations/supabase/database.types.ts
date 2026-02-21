@@ -980,6 +980,7 @@ export type Database = {
           agent_id: string
           created_at: string | null
           date_decision: string | null
+          date_paiement_effectif: string | null
           date_paiement_prevu: string | null
           id: string
           montant_paye: number | null
@@ -997,6 +998,7 @@ export type Database = {
           agent_id: string
           created_at?: string | null
           date_decision?: string | null
+          date_paiement_effectif?: string | null
           date_paiement_prevu?: string | null
           id?: string
           montant_paye?: number | null
@@ -1014,6 +1016,7 @@ export type Database = {
           agent_id?: string
           created_at?: string | null
           date_decision?: string | null
+          date_paiement_effectif?: string | null
           date_paiement_prevu?: string | null
           id?: string
           montant_paye?: number | null

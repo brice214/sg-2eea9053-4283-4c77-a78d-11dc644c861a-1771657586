@@ -1,0 +1,1 @@
+ALTER TABLE rappels_solde ADD COLUMN IF NOT EXISTS date_paiement_effectif DATE;

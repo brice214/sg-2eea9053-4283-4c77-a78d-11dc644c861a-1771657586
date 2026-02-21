@@ -12,10 +12,10 @@ export interface RappelFinancier {
 }
 
 export interface MessageWithSender extends MessageAgent {
-  expediteur?: {
+  expediteur: {
     nom: string;
     prenoms: string;
-  };
+  } | null;
 }
 
 export const agentDashboardService = {
@@ -28,16 +28,16 @@ export const agentDashboardService = {
         .from("rappels_solde")
         .select("*")
         .eq("agent_id", agentId)
-        .order("date_creation", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) {
         console.error("❌ Erreur rappels:", error);
         return { data: null, error: error.message };
       }
 
-      const total_rappel = (rappels || []).reduce((sum, r) => sum + r.montant_total, 0);
-      const total_percu = (rappels || []).reduce((sum, r) => sum + r.montant_percu, 0);
-      const solde_restant = (rappels || []).reduce((sum, r) => sum + r.solde_restant, 0);
+      const total_rappel = (rappels || []).reduce((sum, r) => sum + Number(r.montant_total), 0);
+      const total_percu = (rappels || []).reduce((sum, r) => sum + Number(r.montant_paye || 0), 0);
+      const solde_restant = (rappels || []).reduce((sum, r) => sum + Number(r.montant_restant), 0);
 
       return {
         data: {
@@ -59,6 +59,8 @@ export const agentDashboardService = {
    */
   async getMessages(agentId: string, limit = 50): Promise<{ data: MessageWithSender[] | null; error: string | null }> {
     try {
+      // On utilise 'any' temporairement pour contourner la complexité du typage de la jointure Supabase
+      // qui peut varier selon la génération des types
       const { data, error } = await supabase
         .from("messages_agents")
         .select(`
@@ -69,7 +71,7 @@ export const agentDashboardService = {
           )
         `)
         .eq("agent_id", agentId)
-        .order("date_envoi", { ascending: false })
+        .order("created_at", { ascending: false })
         .limit(limit);
 
       if (error) {
@@ -77,7 +79,16 @@ export const agentDashboardService = {
         return { data: null, error: error.message };
       }
 
-      return { data: data || [], error: null };
+      // Transformation sécurisée pour garantir le type MessageWithSender
+      const formattedData: MessageWithSender[] = (data || []).map((msg: any) => ({
+        ...msg,
+        expediteur: msg.expediteur ? {
+          nom: msg.expediteur.nom,
+          prenoms: msg.expediteur.prenoms
+        } : null
+      }));
+
+      return { data: formattedData, error: null };
     } catch (error: any) {
       console.error("❌ Erreur getMessages:", error);
       return { data: null, error: error.message };

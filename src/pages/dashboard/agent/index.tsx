@@ -155,6 +155,17 @@ export default function AgentDashboard() {
     setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
+  const getRappelLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      promotion: "Promotion",
+      regularisation: "Régularisation",
+      avancement: "Avancement",
+      indemnite: "Indemnité",
+      autre: "Autre rappel"
+    };
+    return labels[type] || type;
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("fr-GA", {
       style: "currency",
@@ -723,16 +734,16 @@ export default function AgentDashboard() {
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <h5 className="font-semibold text-gray-900">{rappel.libelle}</h5>
-                                      <Badge className={getStatutRappelColor(rappel.statut)}>
-                                        {getStatutRappelLabel(rappel.statut)}
+                                      <h5 className="font-semibold text-gray-900">{getRappelLabel(rappel.type_rappel)}</h5>
+                                      <Badge className={getStatutRappelColor(rappel.statut || "EN_ATTENTE")}>
+                                        {getStatutRappelLabel(rappel.statut || "EN_ATTENTE")}
                                       </Badge>
                                     </div>
-                                    <p className="text-sm text-gray-600">{rappel.description || "Aucune description"}</p>
+                                    <p className="text-sm text-gray-600">{rappel.motif || "Aucun motif spécifié"}</p>
                                   </div>
                                   <div className="text-right">
                                     <p className="text-lg font-bold text-gray-900">
-                                      {formatCurrency(rappel.montant_total)}
+                                      {formatCurrency(Number(rappel.montant_total))}
                                     </p>
                                     <p className="text-xs text-gray-500">Montant total</p>
                                   </div>
@@ -750,28 +761,28 @@ export default function AgentDashboard() {
                                   <div>
                                     <p className="text-gray-500 text-xs mb-1">Perçu</p>
                                     <p className="font-medium text-emerald-600">
-                                      {formatCurrency(rappel.montant_percu)}
+                                      {formatCurrency(Number(rappel.montant_paye || 0))}
                                     </p>
                                   </div>
                                   <div>
                                     <p className="text-gray-500 text-xs mb-1">Reste</p>
                                     <p className="font-medium text-yellow-600">
-                                      {formatCurrency(rappel.solde_restant)}
+                                      {formatCurrency(Number(rappel.montant_restant))}
                                     </p>
                                   </div>
                                   <div>
                                     <p className="text-gray-500 text-xs mb-1">Créé le</p>
                                     <p className="font-medium text-gray-700">
-                                      {formatDate(rappel.date_creation)}
+                                      {formatDate(rappel.created_at || undefined)}
                                     </p>
                                   </div>
                                 </div>
 
-                                {rappel.date_paiement && (
+                                {rappel.date_paiement_effectif && (
                                   <div className="mt-3 pt-3 border-t border-gray-100">
                                     <p className="text-xs text-gray-500">
                                       <CheckCircle2 className="h-3 w-3 inline mr-1" />
-                                      Payé le {formatDate(rappel.date_paiement)}
+                                      Payé le {formatDate(rappel.date_paiement_effectif)}
                                     </p>
                                   </div>
                                 )}
@@ -859,13 +870,13 @@ export default function AgentDashboard() {
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <h5 className="font-semibold text-gray-900">{message.objet}</h5>
+                                    <h5 className="font-semibold text-gray-900">{message.sujet}</h5>
                                     {!message.lu && (
                                       <Badge className="bg-purple-500 text-white text-xs">
                                         Nouveau
                                       </Badge>
                                     )}
-                                    <Badge variant="outline" className={getPrioriteColor(message.priorite)}>
+                                    <Badge variant="outline" className={getPrioriteColor(message.priorite || "normale")}>
                                       {message.priorite === "haute" && "Priorité haute"}
                                       {message.priorite === "moyenne" && "Priorité moyenne"}
                                       {message.priorite === "basse" && "Priorité basse"}
@@ -878,7 +889,7 @@ export default function AgentDashboard() {
                                   )}
                                 </div>
                                 <p className="text-xs text-gray-500 whitespace-nowrap ml-4">
-                                  {formatDateTime(message.date_envoi)}
+                                  {formatDateTime(message.created_at || undefined)}
                                 </p>
                               </div>
 
