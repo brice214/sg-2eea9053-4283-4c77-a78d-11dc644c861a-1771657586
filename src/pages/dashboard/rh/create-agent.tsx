@@ -32,7 +32,7 @@ export default function CreateAgent() {
   const [formData, setFormData] = useState<Partial<AgentFormData>>({
     sexe: "M",
     nationalite: "Gabonaise",
-    situation_matrimoniale: "Célibataire",
+    situation_matrimoniale: "célibataire",
     nombre_enfants: 0,
     mode_recrutement: "CONCOURS",
     documents: []
