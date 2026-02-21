@@ -79,7 +79,7 @@ export default function DCRHDashboard() {
   }, []);
 
   const checkAuth = async () => {
-    const { session } = await authService.getSession();
+    const session = await authService.getCurrentSession();
     
     if (!session) {
       router.push("/auth/login");
@@ -95,7 +95,7 @@ export default function DCRHDashboard() {
       
       if (!profile.ministere_id) {
         alert("Erreur : Votre compte n'est pas rattaché à un ministère. Contactez l'administrateur.");
-        await authService.logout();
+        await authService.signOut();
         router.push("/auth/login");
         return;
       }
@@ -109,14 +109,18 @@ export default function DCRHDashboard() {
 
   const loadDashboardData = async (ministereId: string) => {
     const { agents: enAttente } = await agentService.getAgentsByStatus(ministereId, "EN_ATTENTE_VALIDATION");
-    const { agents: valides } = await agentService.getAgentsByStatus(ministereId, "TITULAIRE");
+    // Les agents validés sont initialement STAGIAIRE
+    const { agents: stagiaires } = await agentService.getAgentsByStatus(ministereId, "STAGIAIRE");
+    const { agents: titulaires } = await agentService.getAgentsByStatus(ministereId, "TITULAIRE");
+    
+    const valides = [...(stagiaires || []), ...(titulaires || [])];
     
     setAgentsEnAttente(enAttente || []);
     
     setStats({
-      total_agents: (enAttente?.length || 0) + (valides?.length || 0),
+      total_agents: (enAttente?.length || 0) + valides.length,
       en_attente: enAttente?.length || 0,
-      valides: valides?.length || 0,
+      valides: valides.length,
       rejetes: 0
     });
   };
@@ -174,7 +178,7 @@ export default function DCRHDashboard() {
   };
 
   const handleLogout = async () => {
-    await authService.logout();
+    await authService.signOut();
     router.push("/auth/login");
   };
 

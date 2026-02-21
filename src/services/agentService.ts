@@ -112,7 +112,7 @@ export const agentService = {
         date_decision_recrutement: data.date_decision_recrutement,
         date_recrutement: data.date_decision_recrutement, // Champ obligatoire dans le schéma
         diplome_principal: "Non renseigné", // Champ obligatoire, à demander dans le formulaire plus tard
-        statut: "STAGIAIRE",
+        statut: "EN_ATTENTE_VALIDATION",
         actif: true
       };
 
@@ -473,7 +473,7 @@ export const agentService = {
       const { data: agent, error: updateError } = await supabase
         .from("agents")
         .update({
-          statut: "TITULAIRE",
+          statut: "STAGIAIRE",
           dossier_valide: true,
           date_validation: new Date().toISOString(),
           validateur_id: validateurId,
@@ -496,7 +496,7 @@ export const agentService = {
           entite: "agent",
           entite_id: agentId,
           effectue_par: validateurId,
-          details: { statut_precedent: "EN_ATTENTE_VALIDATION", nouveau_statut: "TITULAIRE" },
+          details: { statut_precedent: "EN_ATTENTE_VALIDATION", nouveau_statut: "STAGIAIRE" },
           commentaire: commentaire || "Dossier validé par la DCRH"
         });
 
@@ -516,7 +516,7 @@ export const agentService = {
       const { data: agent, error: updateError } = await supabase
         .from("agents")
         .update({
-          statut: "STAGIAIRE",
+          statut: "REJETE",
           dossier_valide: false,
           observations: motif,
           updated_at: new Date().toISOString()
@@ -538,7 +538,7 @@ export const agentService = {
           entite: "agent",
           entite_id: agentId,
           effectue_par: validateurId,
-          details: { statut_precedent: "EN_ATTENTE_VALIDATION", nouveau_statut: "STAGIAIRE" },
+          details: { statut_precedent: "EN_ATTENTE_VALIDATION", nouveau_statut: "REJETE" },
           commentaire: motif
         });
 
