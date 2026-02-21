@@ -199,21 +199,24 @@ export const authService = {
         return { profile: null, error: { message: profileError.message } };
       }
 
+      // Cast to any to allow adding dynamic properties
+      const userProfile: any = profile;
+
       // Then, try to get ministry data if ministere_id exists
-      if (profile && profile.ministere_id) {
+      if (userProfile && userProfile.ministere_id) {
         const { data: ministere } = await supabase
           .from("ministeres")
           .select("id, nom, sigle, code")
-          .eq("id", profile.ministere_id)
+          .eq("id", userProfile.ministere_id)
           .single();
         
         // Attach ministry data to profile if found
         if (ministere) {
-          profile.ministeres = ministere;
+          userProfile.ministeres = ministere;
         }
       }
 
-      return { profile, error: null };
+      return { profile: userProfile, error: null };
     } catch (error) {
       return { 
         profile: null, 

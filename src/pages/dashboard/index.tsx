@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authService } from "@/services/authService";
 import { LogOut, Users, FileText, DollarSign, Building2, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -116,39 +117,41 @@ export default function Dashboard() {
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               
               {/* Module Gestion RH */}
-              <Card className="group relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-400 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-100 cursor-pointer bg-gradient-to-br from-white to-emerald-50/50">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <CardHeader className="relative">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="p-3 rounded-xl bg-emerald-100 text-emerald-700 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
-                      <Users className="h-7 w-7" />
+              <Link href="/dashboard/rh">
+                <Card className="group relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-400 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-100 cursor-pointer bg-gradient-to-br from-white to-emerald-50/50">
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <CardHeader className="relative">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="p-3 rounded-xl bg-emerald-100 text-emerald-700 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
+                        <Users className="h-7 w-7" />
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                    <ArrowRight className="h-5 w-5 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                  <CardTitle className="text-2xl font-bold text-slate-900">
-                    Gestion RH
-                  </CardTitle>
-                  <CardDescription className="text-base text-slate-600 mt-2">
-                    Création et gestion des dossiers administratifs des agents publics
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="relative">
-                  <ul className="space-y-2.5 text-sm text-slate-700">
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      Création de dossiers
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      Validation administrative
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      Gestion des pièces
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
+                    <CardTitle className="text-2xl font-bold text-slate-900">
+                      Gestion RH
+                    </CardTitle>
+                    <CardDescription className="text-base text-slate-600 mt-2">
+                      Création et gestion des dossiers administratifs des agents publics
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="relative">
+                    <ul className="space-y-2.5 text-sm text-slate-700">
+                      <li className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Création de dossiers
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Validation administrative
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Gestion des pièces
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </Link>
 
               {/* Module Situations Administratives */}
               <Card className="group relative overflow-hidden border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-100 bg-gradient-to-br from-white to-blue-50/50 opacity-60">
