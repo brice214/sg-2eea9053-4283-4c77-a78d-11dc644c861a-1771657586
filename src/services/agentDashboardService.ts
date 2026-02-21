@@ -18,7 +18,134 @@ export interface MessageWithSender extends MessageAgent {
   } | null;
 }
 
+export interface AgentCareerTimeline {
+  date_recrutement?: string;
+  date_integration?: string;
+  date_titularisation?: string;
+  date_prise_service?: string;
+  date_reprise_service?: string;
+  date_reclassement?: string;
+  date_mise_retraite?: string;
+}
+
+export interface AgentCompletProfile {
+  id: string;
+  matricule: string;
+  nom: string;
+  prenoms: string;
+  email: string;
+  telephone?: string;
+  date_naissance?: string;
+  lieu_naissance?: string;
+  situation_matrimoniale?: string;
+  nombre_enfants?: number;
+  adresse_actuelle?: string;
+  
+  // Informations professionnelles enrichies
+  date_recrutement?: string;
+  date_integration?: string;
+  date_titularisation?: string;
+  date_prise_service?: string;
+  date_reprise_service?: string;
+  date_reclassement?: string;
+  date_mise_retraite?: string;
+  lieu_affectation_actuel?: string;
+  etablissement_affectation?: string;
+  
+  ministere?: {
+    nom: string;
+    sigle: string;
+  };
+  corps?: {
+    nom: string;
+    code: string;
+  };
+  grade?: {
+    nom: string;
+    code: string;
+  };
+  informations_financieres?: {
+    salaire_base: number;
+    indemnite_logement: number;
+    indemnite_transport: number;
+    total_brut: number;
+    total_retenues: number;
+    net_a_payer: number;
+    numero_compte?: string;
+    banque?: string;
+  };
+}
+
 export const agentDashboardService = {
+  /**
+   * Récupérer le profil complet de l'agent avec toutes les informations
+   */
+  async getAgentCompletProfile(userId: string): Promise<{ data: AgentCompletProfile | null; error: string | null }> {
+    try {
+      const { data, error } = await supabase
+        .from("agents")
+        .select(`
+          *,
+          ministere:ministere_id (nom, sigle),
+          corps:corps_id (nom, code),
+          grade:grade_id (nom, code),
+          informations_financieres:informations_financieres_id (
+            salaire_base,
+            indemnite_logement,
+            indemnite_transport,
+            total_brut,
+            total_retenues,
+            net_a_payer,
+            numero_compte,
+            banque
+          )
+        `)
+        .eq("user_id", userId)
+        .single();
+
+      if (error) {
+        console.error("❌ Erreur profil agent:", error);
+        return { data: null, error: error.message };
+      }
+
+      return { data: data as any, error: null };
+    } catch (error: any) {
+      console.error("❌ Erreur getAgentCompletProfile:", error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  /**
+   * Récupérer la timeline de carrière de l'agent
+   */
+  async getCareerTimeline(agentId: string): Promise<{ data: AgentCareerTimeline | null; error: string | null }> {
+    try {
+      const { data, error } = await supabase
+        .from("agents")
+        .select(`
+          date_recrutement,
+          date_integration,
+          date_titularisation,
+          date_prise_service,
+          date_reprise_service,
+          date_reclassement,
+          date_mise_retraite
+        `)
+        .eq("id", agentId)
+        .single();
+
+      if (error) {
+        console.error("❌ Erreur timeline:", error);
+        return { data: null, error: error.message };
+      }
+
+      return { data, error: null };
+    } catch (error: any) {
+      console.error("❌ Erreur getCareerTimeline:", error);
+      return { data: null, error: error.message };
+    }
+  },
+
   /**
    * Récupérer le résumé financier de l'agent (rappels de solde)
    */
@@ -59,8 +186,6 @@ export const agentDashboardService = {
    */
   async getMessages(agentId: string, limit = 50): Promise<{ data: MessageWithSender[] | null; error: string | null }> {
     try {
-      // On utilise 'any' temporairement pour contourner la complexité du typage de la jointure Supabase
-      // qui peut varier selon la génération des types
       const { data, error } = await supabase
         .from("messages_agents")
         .select(`
@@ -79,7 +204,6 @@ export const agentDashboardService = {
         return { data: null, error: error.message };
       }
 
-      // Transformation sécurisée pour garantir le type MessageWithSender
       const formattedData: MessageWithSender[] = (data || []).map((msg: any) => ({
         ...msg,
         expediteur: msg.expediteur ? {
@@ -141,5 +265,39 @@ export const agentDashboardService = {
       console.error("❌ Erreur countUnreadMessages:", error);
       return 0;
     }
+  },
+
+  /**
+   * Calculer les statistiques de carrière
+   */
+  calculateCareerStats(agent: AgentCompletProfile) {
+    const now = new Date();
+    
+    // Calcul de l'ancienneté
+    let anciennete = 0;
+    if (agent.date_recrutement) {
+      const dateRecrutement = new Date(agent.date_recrutement);
+      anciennete = Math.floor((now.getTime() - dateRecrutement.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+    }
+
+    // Calcul des années jusqu'à la retraite
+    let anneesJusquaRetraite = null;
+    if (agent.date_mise_retraite) {
+      const dateMiseRetraite = new Date(agent.date_mise_retraite);
+      anneesJusquaRetraite = Math.max(0, Math.floor((dateMiseRetraite.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365.25)));
+    }
+
+    // Calcul de l'âge
+    let age = null;
+    if (agent.date_naissance) {
+      const dateNaissance = new Date(agent.date_naissance);
+      age = Math.floor((now.getTime() - dateNaissance.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+    }
+
+    return {
+      anciennete,
+      anneesJusquaRetraite,
+      age
+    };
   }
 };
