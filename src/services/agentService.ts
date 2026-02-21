@@ -569,5 +569,43 @@ export const agentService = {
       console.error("Error rejecting agent:", error);
       return { success: false, error: "Failed to reject agent" };
     }
+  },
+
+  /**
+   * Récupérer un agent par son user_id
+   */
+  async getAgentByUserId(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from("agents")
+        .select(`
+          *,
+          ministeres (nom, sigle),
+          corps (nom),
+          grades (nom),
+          informations_financieres (
+            salaire_base,
+            indemnite_logement,
+            indemnite_transport,
+            total_brut,
+            total_retenues,
+            net_a_payer,
+            rib,
+            banque
+          )
+        `)
+        .eq("user_id", userId)
+        .single();
+
+      if (error) {
+        console.error("❌ Erreur getAgentByUserId:", error);
+        return { data: null, error };
+      }
+
+      return { data, error: null };
+    } catch (error) {
+      console.error("❌ Erreur getAgentByUserId:", error);
+      return { data: null, error };
+    }
   }
 };

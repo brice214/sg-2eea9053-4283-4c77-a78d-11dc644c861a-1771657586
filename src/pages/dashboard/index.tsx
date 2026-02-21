@@ -22,23 +22,28 @@ export default function Dashboard() {
           return;
         }
 
-        setProfile(userProfile);
-
-        // Redirection basée sur le rôle - PRIORITÉ ABSOLUE
+        // Rediriger selon le rôle
         if (userProfile.role === "admin_ministere") {
           router.push("/dashboard/admin");
           return;
         }
-        
-        if (userProfile.role === "rh_central") {
-          router.push("/dashboard/dcrh");
-          return;
-        }
-        
-        if (userProfile.role === "rh_ministere") {
+
+        if (userProfile.role === "gestionnaire_rh") {
           router.push("/dashboard/rh");
           return;
         }
+
+        if (userProfile.role === "dcrh") {
+          router.push("/dashboard/dcrh");
+          return;
+        }
+
+        if (userProfile.role === "agent") {
+          router.push("/dashboard/agent");
+          return;
+        }
+
+        setProfile(userProfile);
 
         // Si aucun rôle spécifique, rester sur cette page
         setLoading(false);
