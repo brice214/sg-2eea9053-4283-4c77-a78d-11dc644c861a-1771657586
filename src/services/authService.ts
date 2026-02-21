@@ -177,7 +177,7 @@ export const authService = {
   // Listen to auth state changes
   onAuthStateChange(callback: (event: string, session: Session | null) => void) {
     return supabase.auth.onAuthStateChange(callback);
-  }
+  },
 
   // Get user profile with ministry and role information
   async getUserProfile(): Promise<{ profile: any | null; error: AuthError | null }> {
