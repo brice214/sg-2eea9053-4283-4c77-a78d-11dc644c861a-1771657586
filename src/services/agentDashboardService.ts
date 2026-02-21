@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-type RappelSolde = Database["public"]["Tables"]["rappels_solde"]["Row"];
-type MessageAgent = Database["public"]["Tables"]["messages_agents"]["Row"];
+export type RappelSolde = Database["public"]["Tables"]["rappels_solde"]["Row"];
+export type MessageAgent = Database["public"]["Tables"]["messages_agents"]["Row"];
 
 export interface RappelFinancier {
   total_rappel: number;

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { authService } from "@/services/authService";
-import { agentDashboardService, type AgentProfile, type RappelSolde, type MessageAgent } from "@/services/agentDashboardService";
+import { agentDashboardService, type AgentCompletProfile, type RappelSolde, type MessageAgent } from "@/services/agentDashboardService";
 import {
   Shield,
   User,
@@ -35,7 +35,7 @@ type ActiveSection = "dashboard" | "profile" | "career" | "finances" | "document
 
 export default function AgentDashboard() {
   const router = useRouter();
-  const [agent, setAgent] = useState<AgentProfile | null>(null);
+  const [agent, setAgent] = useState<AgentCompletProfile | null>(null);
   const [rappels, setRappels] = useState<RappelSolde[]>([]);
   const [messages, setMessages] = useState<MessageAgent[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -55,7 +55,7 @@ export default function AgentDashboard() {
         return;
       }
 
-      const { data: agentData, error: agentError } = await agentDashboardService.getAgentProfile(session.user.id);
+      const { data: agentData, error: agentError } = await agentDashboardService.getAgentCompletProfile(session.user.id);
       if (agentError) {
         setError(agentError);
         setIsLoading(false);
@@ -65,8 +65,9 @@ export default function AgentDashboard() {
       if (agentData) {
         setAgent(agentData);
         
-        const { data: rappelsData } = await agentDashboardService.getRappelsSolde(agentData.id);
-        if (rappelsData) setRappels(rappelsData);
+        // Use getRappelsFinanciers instead of getRappelsSolde
+        const { data: rappelsData } = await agentDashboardService.getRappelsFinanciers(agentData.id);
+        if (rappelsData && rappelsData.rappels) setRappels(rappelsData.rappels);
 
         const { data: messagesData } = await agentDashboardService.getMessages(agentData.id);
         if (messagesData) setMessages(messagesData);
@@ -173,13 +174,13 @@ export default function AgentDashboard() {
   return (
     <>
       <SEO 
-        title={`Tableau de bord - ${agent.nom} ${agent.prenom}`}
+        title={`Tableau de bord - ${agent.nom} ${agent.prenoms}`}
         description="Espace personnel agent public - USSALA Gabon"
       />
 
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-yellow-50 flex">
         {/* Sidebar Menu */}
-        <aside className="w-80 bg-white border-r border-green-100 shadow-xl flex flex-col">
+        <aside className="w-80 bg-white border-r border-green-100 shadow-xl flex flex-col fixed h-full z-10">
           {/* Header with Logo */}
           <div className="p-6 border-b border-green-100">
             <div className="flex items-center gap-3 mb-4">
@@ -195,9 +196,9 @@ export default function AgentDashboard() {
             </div>
             
             <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-3 border border-green-100">
-              <p className="text-sm font-semibold text-gray-800">{agent.nom} {agent.prenom}</p>
-              <p className="text-xs text-gray-600 mt-1">{agent.grade || "Grade non renseigné"}</p>
-              <p className="text-xs text-green-600 font-medium mt-1">{agent.corps || "Corps non renseigné"}</p>
+              <p className="text-sm font-semibold text-gray-800">{agent.nom} {agent.prenoms}</p>
+              <p className="text-xs text-gray-600 mt-1">{agent.grade?.nom || "Grade non renseigné"}</p>
+              <p className="text-xs text-green-600 font-medium mt-1">{agent.corps?.nom || "Corps non renseigné"}</p>
             </div>
           </div>
 
@@ -246,7 +247,7 @@ export default function AgentDashboard() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto ml-80">
           <div className="max-w-7xl mx-auto p-8">
             {/* Dashboard Section */}
             {activeSection === "dashboard" && (
@@ -257,16 +258,16 @@ export default function AgentDashboard() {
                     <div className="flex items-start justify-between">
                       <div>
                         <h2 className="text-3xl font-bold mb-2">
-                          Bienvenue, {agent.prenom} {agent.nom}
+                          Bienvenue, {agent.prenoms} {agent.nom}
                         </h2>
                         <div className="flex items-center gap-4 text-green-50">
                           <span className="flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
-                            {agent.ministere_tutelle || "Ministère non renseigné"}
+                            {agent.ministere?.nom || "Ministère non renseigné"}
                           </span>
                           <span className="flex items-center gap-2">
                             <Briefcase className="h-4 w-4" />
-                            {agent.grade || "Grade non renseigné"}
+                            {agent.grade?.nom || "Grade non renseigné"}
                           </span>
                         </div>
                       </div>
@@ -286,7 +287,7 @@ export default function AgentDashboard() {
                           <TrendingUp className="h-4 w-4 text-green-500" />
                         </div>
                         <p className="text-2xl font-bold text-green-700">
-                          {formatCurrency(agent.salaire_net || 0)}
+                          {formatCurrency(agent.informations_financieres?.net_a_payer || 0)}
                         </p>
                         <p className="text-xs text-green-600 mt-1">Salaire Net</p>
                       </div>
@@ -440,7 +441,7 @@ export default function AgentDashboard() {
                         </div>
                         <div>
                           <label className="text-sm text-gray-500">Nom complet</label>
-                          <p className="font-semibold text-gray-800">{agent.nom} {agent.prenom}</p>
+                          <p className="font-semibold text-gray-800">{agent.nom} {agent.prenoms}</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-500">Email professionnel</label>
@@ -479,7 +480,7 @@ export default function AgentDashboard() {
 
                     <div>
                       <label className="text-sm text-gray-500">Adresse complète</label>
-                      <p className="font-semibold text-gray-800 mt-1">{agent.adresse || "Non renseignée"}</p>
+                      <p className="font-semibold text-gray-800 mt-1">{agent.adresse_actuelle || "Non renseignée"}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -502,18 +503,18 @@ export default function AgentDashboard() {
                       <div className="space-y-4">
                         <div>
                           <label className="text-sm text-gray-500">Ministère de tutelle</label>
-                          <p className="font-semibold text-gray-800">{agent.ministere_tutelle || "Non renseigné"}</p>
+                          <p className="font-semibold text-gray-800">{agent.ministere?.nom || "Non renseigné"}</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-500">Corps</label>
-                          <p className="font-semibold text-gray-800">{agent.corps || "Non renseigné"}</p>
+                          <p className="font-semibold text-gray-800">{agent.corps?.nom || "Non renseigné"}</p>
                         </div>
                       </div>
 
                       <div className="space-y-4">
                         <div>
                           <label className="text-sm text-gray-500">Grade</label>
-                          <p className="font-semibold text-gray-800">{agent.grade || "Non renseigné"}</p>
+                          <p className="font-semibold text-gray-800">{agent.grade?.nom || "Non renseigné"}</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-500">Lieu d'affectation actuel</label>
@@ -643,32 +644,32 @@ export default function AgentDashboard() {
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
                           <label className="text-sm text-gray-500">Salaire de base</label>
-                          <p className="font-bold text-gray-800">{formatCurrency(agent.salaire_base || 0)}</p>
+                          <p className="font-bold text-gray-800">{formatCurrency(agent.informations_financieres?.salaire_base || 0)}</p>
                         </div>
                         <div className="flex justify-between items-center">
                           <label className="text-sm text-gray-500">Indemnité de logement</label>
-                          <p className="font-bold text-gray-800">{formatCurrency(agent.indemnite_logement || 0)}</p>
+                          <p className="font-bold text-gray-800">{formatCurrency(agent.informations_financieres?.indemnite_logement || 0)}</p>
                         </div>
                         <div className="flex justify-between items-center">
                           <label className="text-sm text-gray-500">Indemnité de transport</label>
-                          <p className="font-bold text-gray-800">{formatCurrency(agent.indemnite_transport || 0)}</p>
+                          <p className="font-bold text-gray-800">{formatCurrency(agent.informations_financieres?.indemnite_transport || 0)}</p>
                         </div>
                         <Separator className="bg-green-100" />
                         <div className="flex justify-between items-center">
                           <label className="text-sm text-gray-700 font-semibold">Salaire brut</label>
-                          <p className="font-bold text-green-700">{formatCurrency(agent.salaire_brut || 0)}</p>
+                          <p className="font-bold text-green-700">{formatCurrency(agent.informations_financieres?.total_brut || 0)}</p>
                         </div>
                       </div>
 
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
                           <label className="text-sm text-gray-500">Retenues diverses</label>
-                          <p className="font-bold text-red-600">-{formatCurrency(agent.retenues || 0)}</p>
+                          <p className="font-bold text-red-600">-{formatCurrency(agent.informations_financieres?.total_retenues || 0)}</p>
                         </div>
                         <Separator className="bg-green-100" />
                         <div className="bg-gradient-to-br from-green-50 to-blue-50 p-4 rounded-lg border border-green-200">
                           <label className="text-sm text-gray-700 font-semibold">Salaire net à percevoir</label>
-                          <p className="text-3xl font-bold text-green-700 mt-2">{formatCurrency(agent.salaire_net || 0)}</p>
+                          <p className="text-3xl font-bold text-green-700 mt-2">{formatCurrency(agent.informations_financieres?.net_a_payer || 0)}</p>
                         </div>
                       </div>
                     </div>
@@ -683,11 +684,11 @@ export default function AgentDashboard() {
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm text-gray-500">Nom de la banque</label>
-                          <p className="font-semibold text-gray-800">{agent.banque || "Non renseigné"}</p>
+                          <p className="font-semibold text-gray-800">{agent.informations_financieres?.banque || "Non renseigné"}</p>
                         </div>
                         <div>
                           <label className="text-sm text-gray-500">Numéro de compte</label>
-                          <p className="font-semibold text-gray-800 font-mono">{agent.numero_compte_bancaire || "Non renseigné"}</p>
+                          <p className="font-semibold text-gray-800 font-mono">{agent.informations_financieres?.numero_compte || "Non renseigné"}</p>
                         </div>
                       </div>
                     </div>
