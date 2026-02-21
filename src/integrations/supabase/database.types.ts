@@ -403,9 +403,10 @@ export type Database = {
       echelles: {
         Row: {
           actif: boolean | null
+          categorie: string | null
           code: string
           created_at: string | null
-          grade_id: string
+          grade_id: string | null
           id: string
           indice_maximum: number
           indice_minimum: number
@@ -414,9 +415,10 @@ export type Database = {
         }
         Insert: {
           actif?: boolean | null
+          categorie?: string | null
           code: string
           created_at?: string | null
-          grade_id: string
+          grade_id?: string | null
           id?: string
           indice_maximum: number
           indice_minimum: number
@@ -425,9 +427,10 @@ export type Database = {
         }
         Update: {
           actif?: boolean | null
+          categorie?: string | null
           code?: string
           created_at?: string | null
-          grade_id?: string
+          grade_id?: string | null
           id?: string
           indice_maximum?: number
           indice_minimum?: number
@@ -448,34 +451,43 @@ export type Database = {
         Row: {
           actif: boolean | null
           created_at: string | null
+          duree_annees: number | null
           duree_mois: number
           echelle_id: string
           id: string
           indice_brut: number
           indice_majore: number
+          indice_reference: number | null
           numero: number
+          salaire_base: number | null
           updated_at: string | null
         }
         Insert: {
           actif?: boolean | null
           created_at?: string | null
+          duree_annees?: number | null
           duree_mois: number
           echelle_id: string
           id?: string
           indice_brut: number
           indice_majore: number
+          indice_reference?: number | null
           numero: number
+          salaire_base?: number | null
           updated_at?: string | null
         }
         Update: {
           actif?: boolean | null
           created_at?: string | null
+          duree_annees?: number | null
           duree_mois?: number
           echelle_id?: string
           id?: string
           indice_brut?: number
           indice_majore?: number
+          indice_reference?: number | null
           numero?: number
+          salaire_base?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -492,7 +504,7 @@ export type Database = {
         Row: {
           actif: boolean | null
           code: string
-          corps_id: string
+          corps_id: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -503,7 +515,7 @@ export type Database = {
         Insert: {
           actif?: boolean | null
           code: string
-          corps_id: string
+          corps_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -514,7 +526,7 @@ export type Database = {
         Update: {
           actif?: boolean | null
           code?: string
-          corps_id?: string
+          corps_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
