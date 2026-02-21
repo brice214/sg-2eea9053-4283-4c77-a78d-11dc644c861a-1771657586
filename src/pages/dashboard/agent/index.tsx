@@ -811,7 +811,7 @@ export default function AgentDashboard() {
                           { date: agent.date_titularisation, label: "Date de titularisation", icon: Award, color: "emerald" },
                           { date: agent.date_reprise_service, label: "Date de reprise de service", icon: CalendarDays, color: "cyan" },
                           { date: agent.date_reclassement, label: "Date de reclassement", icon: TrendingUp, color: "orange" },
-                          { date: agent.date_mise_retraite, label: "Date de mise en retraite", icon: Timer, color: "red" },
+                          { date: agent.date_mise_en_retraite, label: "Date de mise en retraite", icon: Timer, color: "red" },
                         ].filter(item => item.date).map((item, index) => {
                           const Icon = item.icon;
                           return (
@@ -828,7 +828,7 @@ export default function AgentDashboard() {
                         })}
 
                         {/* Si aucune date n'est disponible */}
-                        {![agent.date_recrutement, agent.date_prise_service, agent.date_integration, agent.date_titularisation, agent.date_reprise_service, agent.date_reclassement, agent.date_mise_retraite].some(d => d) && (
+                        {![agent.date_recrutement, agent.date_prise_service, agent.date_integration, agent.date_titularisation, agent.date_reprise_service, agent.date_reclassement, agent.date_mise_en_retraite].some(d => d) && (
                           <div className="text-center py-12">
                             <CalendarDays className="h-16 w-16 mx-auto mb-4 text-gray-600 opacity-50" />
                             <p className="text-gray-400">Aucune date de carrière enregistrée</p>

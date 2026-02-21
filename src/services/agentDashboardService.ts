@@ -25,7 +25,7 @@ export interface AgentCareerTimeline {
   date_prise_service?: string;
   date_reprise_service?: string;
   date_reclassement?: string;
-  date_mise_retraite?: string;
+  date_mise_en_retraite?: string;
 }
 
 export interface AgentCompletProfile {
@@ -48,7 +48,7 @@ export interface AgentCompletProfile {
   date_prise_service?: string;
   date_reprise_service?: string;
   date_reclassement?: string;
-  date_mise_retraite?: string;
+  date_mise_en_retraite?: string;
   lieu_affectation_actuel?: string;
   etablissement_affectation?: string;
   
@@ -129,7 +129,7 @@ export const agentDashboardService = {
           date_prise_service,
           date_reprise_service,
           date_reclassement,
-          date_mise_retraite
+          date_mise_en_retraite
         `)
         .eq("id", agentId)
         .single();
@@ -282,8 +282,8 @@ export const agentDashboardService = {
 
     // Calcul des années jusqu'à la retraite
     let anneesJusquaRetraite = null;
-    if (agent.date_mise_retraite) {
-      const dateMiseRetraite = new Date(agent.date_mise_retraite);
+    if (agent.date_mise_en_retraite) {
+      const dateMiseRetraite = new Date(agent.date_mise_en_retraite);
       anneesJusquaRetraite = Math.max(0, Math.floor((dateMiseRetraite.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 365.25)));
     }
 
