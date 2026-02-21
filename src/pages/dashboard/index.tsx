@@ -29,16 +29,6 @@ export default function Dashboard() {
     const { profile } = await authService.getUserProfile();
     if (profile) {
       setUserProfile(profile);
-      
-      // Redirection automatique selon le rôle
-      if (profile.role === "rh_central") {
-        router.push("/dashboard/dcrh");
-        return;
-      }
-      if (profile.role === "rh_ministere") {
-        router.push("/dashboard/rh");
-        return;
-      }
     }
 
     setLoading(false);
