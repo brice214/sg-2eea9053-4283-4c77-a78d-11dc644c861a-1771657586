@@ -162,6 +162,7 @@ export const agentService = {
 
   /**
    * Valider la hiérarchie corps → grade → échelle → échelon
+   * NOUVELLE LOGIQUE pour la grille indiciaire 2015
    */
   async validateHierarchy(
     corps_id: string,
@@ -170,49 +171,43 @@ export const agentService = {
     echelon_id: string
   ): Promise<string | null> {
     try {
-      // Vérifier que le grade appartient bien au corps
+      // 1. Récupérer le corps pour connaître sa catégorie
+      const { data: corps, error: corpsError } = await supabase
+        .from("corps")
+        .select("categorie")
+        .eq("id", corps_id)
+        .single();
+
+      if (corpsError || !corps) {
+        return "Le corps sélectionné n'existe pas";
+      }
+
+      // 2. Vérifier que le grade existe (grades transversaux)
       const { data: grade, error: gradeError } = await supabase
         .from("grades")
-        .select("*, corps(categorie)") // Join pour récupérer la catégorie du corps
+        .select("*")
         .eq("id", grade_id)
-        .eq("corps_id", corps_id)
+        .is("corps_id", null) // Grade transversal
         .single();
 
       if (gradeError || !grade) {
-        return "Le grade sélectionné n'appartient pas au corps choisi";
+        return "Le grade sélectionné n'existe pas ou n'est pas valide";
       }
 
-      // Vérifier que l'échelle correspond à la catégorie du corps du grade
-      // Note: grade.corps est un objet ou un tableau selon la réponse, typage Supabase
-      const corpsCategorie = (grade.corps as any)?.categorie;
-
-      if (!corpsCategorie) {
-         return "Impossible de vérifier la catégorie du corps";
-      }
-
+      // 3. Vérifier que l'échelle correspond à (catégorie du corps × grade)
       const { data: echelle, error: echelleError } = await supabase
         .from("echelles")
         .select("*")
         .eq("id", echelle_id)
-        // La colonne categorie n'existe pas dans echelles selon le schéma fourni plus tôt? 
-        // Vérifions le schéma echelles: id, code, nom, grade_id, indice_min... 
-        // Ah, le schéma echelles a grade_id ! Donc l'échelle est liée au grade, pas juste à la catégorie.
-        // Mais le code précédent utilisait categorie. 
-        // Le schéma montre: echelles.grade_id -> grades.id.
-        // Donc on doit vérifier que l'échelle est liée au grade.
-        .eq("grade_id", grade_id)
+        .eq("categorie", corps.categorie) // Même catégorie que le corps
+        .eq("grade_id", grade_id) // Même grade sélectionné
         .single();
 
       if (echelleError || !echelle) {
-        // Si pas de lien direct, vérifions si logique différente (ex: echelles globales par catégorie)
-        // Le schéma dit: echelles a une FK grade_id. Donc une échelle appartient à un grade spécifique ?
-        // Ou alors c'est une erreur de conception dans mon schéma précédent versus la logique métier.
-        // Dans l'administration gabonaise, les échelles sont souvent par catégorie (A1, A2...).
-        // Si le schéma a grade_id, alors l'échelle est spécifique au grade.
-        return "L'échelle sélectionnée ne correspond pas au grade";
+        return `L'échelle sélectionnée ne correspond pas à la combinaison catégorie ${corps.categorie} × grade ${grade.nom}`;
       }
 
-      // Vérifier que l'échelon appartient à l'échelle
+      // 4. Vérifier que l'échelon appartient à l'échelle
       const { data: echelon, error: echelonError } = await supabase
         .from("echelons")
         .select("*")
@@ -245,7 +240,7 @@ export const agentService = {
         .select(`
           *,
           ministeres(nom),
-          corps(intitule),
+          corps(nom),
           grades(nom),
           postes(intitule)
         `)
@@ -339,53 +334,66 @@ export const agentService = {
   },
 
   /**
-   * Récupérer les corps
+   * Récupérer les corps avec leur catégorie
    */
   async getCorps() {
     const { data, error } = await supabase
       .from("corps")
       .select("*")
       .eq("actif", true)
-      .order("nom"); // intitule n'existe pas dans corps, c'est nom
+      .order("categorie, nom");
 
     return { data: data || [], error };
   },
 
   /**
-   * Récupérer les grades d'un corps
+   * Récupérer les grades transversaux (non liés à un corps spécifique)
+   * Ces grades sont issus de la grille indiciaire 2015
    */
-  async getGradesByCorps(corps_id: string) {
+  async getGradesTransversaux() {
     const { data, error } = await supabase
       .from("grades")
       .select("*")
-      .eq("corps_id", corps_id)
+      .is("corps_id", null) // Grades transversaux uniquement
       .eq("actif", true)
-      .order("ordre", { ascending: false }); // ordre_hierarchique n'existe pas, c'est ordre
+      .order("ordre", { ascending: false });
 
     return { data: data || [], error };
   },
 
   /**
-   * Récupérer les échelles par catégorie (via le grade en fait selon le schéma)
-   * CORRECTION: Le schéma lie echelles à grade_id.
-   * Donc on doit récupérer les échelles d'un grade donné.
+   * Récupérer les échelles disponibles pour une combinaison corps × grade
+   * NOUVELLE LOGIQUE selon la grille indiciaire 2015
+   * 
+   * @param corps_id - ID du corps (contient la catégorie)
+   * @param grade_id - ID du grade (transversal)
+   * @returns Échelles correspondant à (catégorie du corps × grade)
    */
-  async getEchellesByCategorie(categorie: string) {
-    // Cette fonction est problématique avec le schéma actuel où échelle dépend de grade.
-    // On va plutôt créer getEchellesByGrade
-    console.warn("getEchellesByCategorie deprecated, use getEchellesByGrade");
-    return { data: [], error: null };
-  },
+  async getEchellesByCorpsAndGrade(corps_id: string, grade_id: string) {
+    try {
+      // 1. Récupérer la catégorie du corps
+      const { data: corps, error: corpsError } = await supabase
+        .from("corps")
+        .select("categorie")
+        .eq("id", corps_id)
+        .single();
 
-  async getEchellesByGrade(grade_id: string) {
-    const { data, error } = await supabase
-      .from("echelles")
-      .select("*")
-      .eq("grade_id", grade_id)
-      .eq("actif", true)
-      .order("nom"); // lettre n'existe pas, c'est nom
+      if (corpsError || !corps) {
+        return { data: [], error: corpsError };
+      }
 
-    return { data: data || [], error };
+      // 2. Récupérer les échelles correspondant à cette catégorie ET ce grade
+      const { data, error } = await supabase
+        .from("echelles")
+        .select("*")
+        .eq("categorie", corps.categorie)
+        .eq("grade_id", grade_id)
+        .eq("actif", true);
+
+      return { data: data || [], error };
+    } catch (error: any) {
+      return { data: [], error };
+    }
   },
 
   /**
@@ -396,7 +404,7 @@ export const agentService = {
       .from("echelons")
       .select("*")
       .eq("echelle_id", echelle_id)
-      .order("numero");
+      .order("numero", { ascending: false }); // 5ème, 4ème, 3ème, 2ème, 1er
 
     return { data: data || [], error };
   },
@@ -422,7 +430,7 @@ export const agentService = {
       .from("types_documents")
       .select("*")
       .eq("actif", true)
-      .order("ordre_affichage"); // ordre -> ordre_affichage
+      .order("ordre_affichage");
 
     return { data: data || [], error };
   }

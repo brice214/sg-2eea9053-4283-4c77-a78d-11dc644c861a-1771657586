@@ -59,17 +59,20 @@ export default function CreateAgent() {
     const [
       ministeresData,
       corpsData,
+      gradesData,
       postesData,
       typesDocsData
     ] = await Promise.all([
       agentService.getMinisteres(),
       agentService.getCorps(),
+      agentService.getGradesTransversaux(), // NOUVEAU: Grades transversaux de la grille 2015
       agentService.getPostes(),
       agentService.getTypesDocuments()
     ]);
 
     setMinisteres(ministeresData.data);
     setCorps(corpsData.data);
+    setGrades(gradesData.data); // Grades transversaux chargés immédiatement
     setPostes(postesData.data);
     setTypesDocuments(typesDocsData.data);
 
@@ -79,9 +82,7 @@ export default function CreateAgent() {
   const handleCorpsChange = async (corps_id: string) => {
     setFormData({ ...formData, corps_id, grade_id: undefined, echelle_id: undefined, echelon_id: undefined });
     
-    // Charger les grades du corps
-    const { data } = await agentService.getGradesByCorps(corps_id);
-    setGrades(data);
+    // Réinitialiser les échelles et échelons
     setEchelles([]);
     setEchelons([]);
   };
@@ -89,11 +90,9 @@ export default function CreateAgent() {
   const handleGradeChange = async (grade_id: string) => {
     setFormData({ ...formData, grade_id, echelle_id: undefined, echelon_id: undefined });
     
-    // Trouver la catégorie du grade (plus nécessaire pour l'appel mais utile si besoin d'info)
-    const grade = grades.find(g => g.id === grade_id);
-    if (grade) {
-      // CORRECTION: Utiliser getEchellesByGrade au lieu de getEchellesByCategorie
-      const { data } = await agentService.getEchellesByGrade(grade_id);
+    // Charger les échelles pour la combinaison (catégorie du corps × grade)
+    if (formData.corps_id) {
+      const { data } = await agentService.getEchellesByCorpsAndGrade(formData.corps_id, grade_id);
       setEchelles(data);
       setEchelons([]);
     }
@@ -403,7 +402,7 @@ export default function CreateAgent() {
                       <SelectContent>
                         {corps.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
-                            {c.nom} ({c.categorie})
+                            {c.nom} (Catégorie {c.categorie})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -428,6 +427,11 @@ export default function CreateAgent() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {formData.corps_id && !formData.grade_id && (
+                      <p className="text-xs text-gray-500">
+                        Grades disponibles pour toutes les catégories (Grille 2015)
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -437,7 +441,7 @@ export default function CreateAgent() {
                     <Select
                       value={formData.echelle_id}
                       onValueChange={handleEchelleChange}
-                      disabled={!formData.grade_id}
+                      disabled={!formData.corps_id || !formData.grade_id}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner une échelle" />
@@ -445,11 +449,16 @@ export default function CreateAgent() {
                       <SelectContent>
                         {echelles.map((e) => (
                           <SelectItem key={e.id} value={e.id}>
-                            Échelle {e.nom}
+                            {e.nom}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {formData.corps_id && formData.grade_id && echelles.length === 0 && (
+                      <p className="text-xs text-red-500">
+                        Aucune échelle disponible pour cette combinaison
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -465,7 +474,9 @@ export default function CreateAgent() {
                       <SelectContent>
                         {echelons.map((ec) => (
                           <SelectItem key={ec.id} value={ec.id}>
-                            Échelon {ec.numero} ({ec.indice_majore} pts)
+                            {ec.numero === 0 ? "Stagiaire" : `${ec.numero}${ec.numero === 1 ? "er" : "ème"} échelon`} 
+                            {ec.indice_reference && ` (Indice: ${ec.indice_reference})`}
+                            {ec.salaire_base && ` - ${Number(ec.salaire_base).toLocaleString('fr-FR')} FCFA`}
                           </SelectItem>
                         ))}
                       </SelectContent>
