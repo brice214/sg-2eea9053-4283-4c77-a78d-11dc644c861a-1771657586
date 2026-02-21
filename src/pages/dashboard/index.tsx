@@ -4,7 +4,7 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authService } from "@/services/authService";
-import { LogOut, Users, FileText, DollarSign, Building2, ArrowRight } from "lucide-react";
+import { LogOut, Users, FileText, DollarSign, Building2, ArrowRight, FileCheck } from "lucide-react";
 import Link from "next/link";
 
 export default function Dashboard() {
@@ -104,120 +104,72 @@ export default function Dashboard() {
 
           {/* Grille de modules - Design moderne */}
           <div className="max-w-6xl mx-auto">
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               
               {/* Module Gestion RH */}
-              <Link href="/dashboard/rh">
-                <Card className="group relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-400 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-100 cursor-pointer bg-gradient-to-br from-white to-emerald-50/50">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <CardHeader className="relative">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="p-3 rounded-xl bg-emerald-100 text-emerald-700 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
-                        <Users className="h-7 w-7" />
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-green-200 hover:border-green-400">
+                <Link href="/dashboard/rh">
+                  <CardHeader className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl">Gestion RH</CardTitle>
+                      <div className="p-3 bg-green-100 rounded-lg">
+                        <Users className="h-6 w-6 text-green-600" />
                       </div>
-                      <ArrowRight className="h-5 w-5 text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                    <CardTitle className="text-2xl font-bold text-slate-900">
-                      Gestion RH
-                    </CardTitle>
-                    <CardDescription className="text-base text-slate-600 mt-2">
-                      Création et gestion des dossiers administratifs des agents publics
+                    <CardDescription>
+                      Gestion des dossiers administratifs des agents
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative">
-                    <ul className="space-y-2.5 text-sm text-slate-700">
-                      <li className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        Création de dossiers
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        Validation administrative
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        Gestion des pièces
-                      </li>
-                    </ul>
+                  <CardContent>
+                    <p className="text-sm text-gray-600">
+                      Créer et gérer les dossiers des agents publics de votre ministère
+                    </p>
                   </CardContent>
-                </Card>
-              </Link>
-
-              {/* Module Situations Administratives */}
-              <Card className="group relative overflow-hidden border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-100 bg-gradient-to-br from-white to-blue-50/50 opacity-60">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent" />
-                <CardHeader className="relative">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="p-3 rounded-xl bg-blue-100 text-blue-700">
-                      <FileText className="h-7 w-7" />
-                    </div>
-                  </div>
-                  <CardTitle className="text-2xl font-bold text-slate-900">
-                    Situations Admin.
-                  </CardTitle>
-                  <CardDescription className="text-base text-slate-600 mt-2">
-                    Gestion des situations administratives des agents
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="relative">
-                  <ul className="space-y-2.5 text-sm text-slate-700">
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                      Mutations
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                      Promotions
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                      Congés & Absences
-                    </li>
-                  </ul>
-                  <div className="mt-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                      Prochainement
-                    </span>
-                  </div>
-                </CardContent>
+                </Link>
               </Card>
 
-              {/* Module Situations Financières */}
-              <Card className="group relative overflow-hidden border-2 border-amber-200 hover:border-amber-400 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-100 bg-gradient-to-br from-white to-amber-50/50 opacity-60">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent" />
-                <CardHeader className="relative">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="p-3 rounded-xl bg-amber-100 text-amber-700">
-                      <DollarSign className="h-7 w-7" />
+              {/* Module DCRH */}
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-blue-200 hover:border-blue-400">
+                <Link href="/dashboard/dcrh">
+                  <CardHeader className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl">DCRH</CardTitle>
+                      <div className="p-3 bg-blue-100 rounded-lg">
+                        <FileCheck className="h-6 w-6 text-blue-600" />
+                      </div>
+                    </div>
+                    <CardDescription>
+                      Validation centrale des dossiers
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600">
+                      Valider ou rejeter les dossiers administratifs soumis
+                    </p>
+                  </CardContent>
+                </Link>
+              </Card>
+
+              {/* Module Situations Administratives */}
+              <Card className="hover:shadow-lg transition-shadow opacity-50 cursor-not-allowed border-yellow-200">
+                <CardHeader className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      Situations Administratives
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Bientôt</span>
+                    </CardTitle>
+                    <div className="p-3 bg-yellow-100 rounded-lg">
+                      <FileText className="h-6 w-6 text-yellow-600" />
                     </div>
                   </div>
-                  <CardTitle className="text-2xl font-bold text-slate-900">
-                    Situations Fin.
-                  </CardTitle>
-                  <CardDescription className="text-base text-slate-600 mt-2">
-                    Gestion financière et des soldes des agents
+                  <CardDescription>
+                    Mutations, promotions, congés, sanctions
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="relative">
-                  <ul className="space-y-2.5 text-sm text-slate-700">
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      Salaires
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      Primes & Indemnités
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      Historique de paie
-                    </li>
-                  </ul>
-                  <div className="mt-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                      Prochainement
-                    </span>
-                  </div>
+                <CardContent>
+                  <p className="text-sm text-gray-600">
+                    Gérer les mouvements et actes administratifs
+                  </p>
                 </CardContent>
               </Card>
 

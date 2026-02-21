@@ -74,6 +74,13 @@ export default function CreateAgent() {
       return;
     }
 
+    if (!profile.roles.includes("rh_ministere")) {
+      console.error("❌ [checkAuth] User does not have the 'rh_ministere' role");
+      setError("Vous n'avez pas les autorisations nécessaires pour créer un agent.");
+      setLoading(false);
+      return;
+    }
+
     console.log("✅ [checkAuth] Profile loaded successfully:", profile.email);
     setUserProfile(profile);
     loadOptions();

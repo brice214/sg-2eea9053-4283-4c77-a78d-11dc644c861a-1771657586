@@ -41,11 +41,28 @@ export default function RHDashboard() {
   }, []);
 
   const checkAuth = async () => {
+    console.log("🔍 [checkAuth] Starting authentication check...");
+    
     const session = await authService.getCurrentSession();
+    console.log("🔍 [checkAuth] Session:", session?.user?.id);
+    
     if (!session) {
+      console.log("⚠️ [checkAuth] No session, redirecting to login");
       router.push("/auth/login");
       return;
     }
+
+    // Récupérer le profil de l'utilisateur
+    console.log("🔍 [checkAuth] Fetching user profile...");
+    const { profile, error: profileError } = await authService.getUserProfile();
+    console.log("🔍 [checkAuth] Profile result:", { profile, profileError });
+
+    if (profile?.role !== "rh_ministere") {
+      console.log("⚠️ [checkAuth] User is not authorized to access this page");
+      router.push("/dashboard");
+      return;
+    }
+
     loadData();
   };
 
