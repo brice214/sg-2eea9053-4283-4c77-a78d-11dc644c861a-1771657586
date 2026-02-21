@@ -43,35 +43,47 @@ export default function CreateAgent() {
   }, []);
 
   const checkAuth = async () => {
+    console.log("🔍 [checkAuth] Starting authentication check...");
+    
     const session = await authService.getCurrentSession();
+    console.log("🔍 [checkAuth] Session:", session?.user?.id);
+    
     if (!session) {
+      console.log("⚠️ [checkAuth] No session, redirecting to login");
       router.push("/auth/login");
       return;
     }
 
     // Récupérer le profil de l'utilisateur avec son ministère
+    console.log("🔍 [checkAuth] Fetching user profile...");
     const { profile, error: profileError } = await authService.getUserProfile();
+    console.log("🔍 [checkAuth] Profile result:", { profile, profileError });
     
     if (profileError || !profile) {
+      console.error("❌ [checkAuth] Profile error:", profileError);
       setError("Impossible de récupérer votre profil utilisateur");
       setLoading(false);
       return;
     }
 
     if (!profile.ministere_id) {
+      console.error("❌ [checkAuth] No ministere_id in profile");
       setError("Votre compte n'est pas associé à un ministère. Contactez l'administrateur.");
       setLoading(false);
       return;
     }
 
+    console.log("✅ [checkAuth] Profile loaded successfully:", profile.email);
     setUserProfile(profile);
     loadOptions();
   };
 
   const loadOptions = async () => {
+    console.log("🔍 [loadOptions] Starting to load form options...");
     setLoading(true);
 
     // Charger toutes les options
+    console.log("🔍 [loadOptions] Fetching corps, grades, postes...");
     const [
       corpsData,
       gradesData,
@@ -82,10 +94,15 @@ export default function CreateAgent() {
       agentService.getPostes()
     ]);
 
+    console.log("🔍 [loadOptions] Corps:", corpsData.data?.length || 0, "items");
+    console.log("🔍 [loadOptions] Grades:", gradesData.data?.length || 0, "items");
+    console.log("🔍 [loadOptions] Postes:", postesData.data?.length || 0, "items");
+
     setCorps(corpsData.data);
     setGrades(gradesData.data);
     setPostes(postesData.data);
 
+    console.log("✅ [loadOptions] All options loaded");
     setLoading(false);
   };
 

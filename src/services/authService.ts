@@ -182,42 +182,59 @@ export const authService = {
   // Get user profile with ministry and role information
   async getUserProfile(): Promise<{ profile: any | null; error: AuthError | null }> {
     try {
+      console.log("🔍 [getUserProfile] Starting...");
+      
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("🔍 [getUserProfile] Current user:", user?.id, user?.email);
       
       if (!user) {
+        console.log("⚠️ [getUserProfile] No user logged in");
         return { profile: null, error: null };
       }
 
       // First, get the basic profile
+      console.log("🔍 [getUserProfile] Fetching profile for user:", user.id);
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
 
+      console.log("🔍 [getUserProfile] Profile query result:", { profile, profileError });
+
       if (profileError) {
+        console.error("❌ [getUserProfile] Profile error:", profileError);
         return { profile: null, error: { message: profileError.message } };
       }
 
       // Cast to any to allow adding dynamic properties
       const userProfile: any = profile;
+      console.log("🔍 [getUserProfile] Basic profile loaded:", userProfile);
 
       // Then, try to get ministry data if ministere_id exists
       if (userProfile && userProfile.ministere_id) {
-        const { data: ministere } = await supabase
+        console.log("🔍 [getUserProfile] Fetching ministry:", userProfile.ministere_id);
+        const { data: ministere, error: ministryError } = await supabase
           .from("ministeres")
           .select("id, nom, sigle, code")
           .eq("id", userProfile.ministere_id)
           .single();
         
+        console.log("🔍 [getUserProfile] Ministry query result:", { ministere, ministryError });
+        
         // Attach ministry data to profile if found
         if (ministere) {
           userProfile.ministeres = ministere;
+          console.log("✅ [getUserProfile] Ministry attached:", ministere.nom);
         }
+      } else {
+        console.log("ℹ️ [getUserProfile] No ministere_id in profile");
       }
 
+      console.log("✅ [getUserProfile] Final profile:", userProfile);
       return { profile: userProfile, error: null };
     } catch (error) {
+      console.error("💥 [getUserProfile] Unexpected error:", error);
       return { 
         profile: null, 
         error: { message: "An unexpected error occurred while fetching user profile" } 

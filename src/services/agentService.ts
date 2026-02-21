@@ -337,12 +337,14 @@ export const agentService = {
    * Récupérer les corps avec leur catégorie
    */
   async getCorps() {
+    console.log("🔍 [getCorps] Fetching corps...");
     const { data, error } = await supabase
       .from("corps")
       .select("*")
       .eq("actif", true)
       .order("categorie, nom");
 
+    console.log("🔍 [getCorps] Result:", { count: data?.length || 0, error });
     return { data: data || [], error };
   },
 
@@ -351,6 +353,7 @@ export const agentService = {
    * Ces grades sont issus de la grille indiciaire 2015
    */
   async getGradesTransversaux() {
+    console.log("🔍 [getGradesTransversaux] Fetching transversal grades...");
     const { data, error } = await supabase
       .from("grades")
       .select("*")
@@ -358,6 +361,7 @@ export const agentService = {
       .eq("actif", true)
       .order("ordre", { ascending: false });
 
+    console.log("🔍 [getGradesTransversaux] Result:", { count: data?.length || 0, error });
     return { data: data || [], error };
   },
 
@@ -370,6 +374,7 @@ export const agentService = {
    * @returns Échelles correspondant à (catégorie du corps × grade)
    */
   async getEchellesByCorpsAndGrade(corps_id: string, grade_id: string) {
+    console.log("🔍 [getEchellesByCorpsAndGrade] Fetching echelles for:", { corps_id, grade_id });
     try {
       // 1. Récupérer la catégorie du corps
       const { data: corps, error: corpsError } = await supabase
@@ -379,8 +384,11 @@ export const agentService = {
         .single();
 
       if (corpsError || !corps) {
+        console.error("❌ [getEchellesByCorpsAndGrade] Corps error:", corpsError);
         return { data: [], error: corpsError };
       }
+
+      console.log("🔍 [getEchellesByCorpsAndGrade] Corps category:", corps.categorie);
 
       // 2. Récupérer les échelles correspondant à cette catégorie ET ce grade
       const { data, error } = await supabase
@@ -390,8 +398,10 @@ export const agentService = {
         .eq("grade_id", grade_id)
         .eq("actif", true);
 
+      console.log("🔍 [getEchellesByCorpsAndGrade] Result:", { count: data?.length || 0, error });
       return { data: data || [], error };
     } catch (error: any) {
+      console.error("💥 [getEchellesByCorpsAndGrade] Unexpected error:", error);
       return { data: [], error };
     }
   },
@@ -400,12 +410,14 @@ export const agentService = {
    * Récupérer les échelons d'une échelle
    */
   async getEchelonsByEchelle(echelle_id: string) {
+    console.log("🔍 [getEchelonsByEchelle] Fetching echelons for echelle:", echelle_id);
     const { data, error } = await supabase
       .from("echelons")
       .select("*")
       .eq("echelle_id", echelle_id)
       .order("numero", { ascending: false }); // 5ème, 4ème, 3ème, 2ème, 1er
 
+    console.log("🔍 [getEchelonsByEchelle] Result:", { count: data?.length || 0, error });
     return { data: data || [], error };
   },
 
@@ -413,12 +425,14 @@ export const agentService = {
    * Récupérer les postes
    */
   async getPostes() {
+    console.log("🔍 [getPostes] Fetching postes...");
     const { data, error } = await supabase
       .from("postes")
       .select("*")
       .eq("actif", true)
       .order("intitule");
 
+    console.log("🔍 [getPostes] Result:", { count: data?.length || 0, error });
     return { data: data || [], error };
   },
 
