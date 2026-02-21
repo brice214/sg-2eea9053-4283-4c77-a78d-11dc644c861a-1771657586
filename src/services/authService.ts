@@ -178,4 +178,35 @@ export const authService = {
   onAuthStateChange(callback: (event: string, session: Session | null) => void) {
     return supabase.auth.onAuthStateChange(callback);
   }
+
+  // Get user profile with ministry and role information
+  async getUserProfile(): Promise<{ profile: any | null; error: AuthError | null }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        return { profile: null, error: null };
+      }
+
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select(`
+          *,
+          ministeres(id, nom, sigle, code)
+        `)
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        return { profile: null, error: { message: error.message } };
+      }
+
+      return { profile, error: null };
+    } catch (error) {
+      return { 
+        profile: null, 
+        error: { message: "An unexpected error occurred while fetching user profile" } 
+      };
+    }
+  }
 };

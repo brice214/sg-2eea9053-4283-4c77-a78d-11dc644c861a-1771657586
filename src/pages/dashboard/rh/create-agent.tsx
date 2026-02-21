@@ -19,15 +19,14 @@ export default function CreateAgent() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   // Options pour les selects
-  const [ministeres, setMinisteres] = useState<any[]>([]);
   const [corps, setCorps] = useState<any[]>([]);
   const [grades, setGrades] = useState<any[]>([]);
   const [echelles, setEchelles] = useState<any[]>([]);
   const [echelons, setEchelons] = useState<any[]>([]);
   const [postes, setPostes] = useState<any[]>([]);
-  const [typesDocuments, setTypesDocuments] = useState<any[]>([]);
 
   // Données du formulaire
   const [formData, setFormData] = useState<Partial<AgentFormData>>({
@@ -49,6 +48,23 @@ export default function CreateAgent() {
       router.push("/auth/login");
       return;
     }
+
+    // Récupérer le profil de l'utilisateur avec son ministère
+    const { profile, error: profileError } = await authService.getUserProfile();
+    
+    if (profileError || !profile) {
+      setError("Impossible de récupérer votre profil utilisateur");
+      setLoading(false);
+      return;
+    }
+
+    if (!profile.ministere_id) {
+      setError("Votre compte n'est pas associé à un ministère. Contactez l'administrateur.");
+      setLoading(false);
+      return;
+    }
+
+    setUserProfile(profile);
     loadOptions();
   };
 
@@ -57,24 +73,18 @@ export default function CreateAgent() {
 
     // Charger toutes les options
     const [
-      ministeresData,
       corpsData,
       gradesData,
-      postesData,
-      typesDocsData
+      postesData
     ] = await Promise.all([
-      agentService.getMinisteres(),
       agentService.getCorps(),
-      agentService.getGradesTransversaux(), // NOUVEAU: Grades transversaux de la grille 2015
-      agentService.getPostes(),
-      agentService.getTypesDocuments()
+      agentService.getGradesTransversaux(),
+      agentService.getPostes()
     ]);
 
-    setMinisteres(ministeresData.data);
     setCorps(corpsData.data);
-    setGrades(gradesData.data); // Grades transversaux chargés immédiatement
+    setGrades(gradesData.data);
     setPostes(postesData.data);
-    setTypesDocuments(typesDocsData.data);
 
     setLoading(false);
   };
@@ -117,7 +127,7 @@ export default function CreateAgent() {
       return;
     }
 
-    if (!formData.ministere_id || !formData.corps_id || !formData.grade_id || !formData.echelle_id || !formData.echelon_id) {
+    if (!formData.corps_id || !formData.grade_id || !formData.echelle_id || !formData.echelon_id) {
       setError("Veuillez remplir toutes les informations administratives");
       return;
     }
@@ -130,7 +140,15 @@ export default function CreateAgent() {
     setSubmitting(true);
 
     try {
-      const { agent, error: createError } = await agentService.createAgent(formData as AgentFormData);
+      // Auto-remplir le ministère depuis le profil de l'utilisateur connecté
+      const completeFormData: AgentFormData = {
+        ...formData as AgentFormData,
+        ministere_id: userProfile.ministere_id,
+        direction_id: userProfile.direction_id || null,
+        service_id: userProfile.service_id || null
+      };
+
+      const { agent, error: createError } = await agentService.createAgent(completeFormData);
 
       if (createError) {
         setError(createError);
@@ -180,7 +198,14 @@ export default function CreateAgent() {
                 </Button>
               </Link>
               <div className="h-6 w-px bg-gray-300" />
-              <h1 className="text-2xl font-bold text-gray-900">Créer un dossier administratif</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Créer un dossier administratif</h1>
+                {userProfile?.ministeres && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    {userProfile.ministeres.nom} ({userProfile.ministeres.sigle})
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </header>
@@ -351,25 +376,6 @@ export default function CreateAgent() {
                 <CardDescription>Affectation et classification</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ministere">Ministère employeur *</Label>
-                  <Select
-                    value={formData.ministere_id}
-                    onValueChange={(value) => setFormData({ ...formData, ministere_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un ministère" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ministeres.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.nom}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="poste">Poste *</Label>
                   <Select
