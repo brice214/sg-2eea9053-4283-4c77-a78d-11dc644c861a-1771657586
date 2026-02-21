@@ -5,7 +5,7 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authService } from "@/services/authService";
-import { LogOut, Users, FileText, DollarSign, Settings, BarChart3 } from "lucide-react";
+import { LogOut, Users, FileText, DollarSign, Settings, BarChart3, UserCheck } from "lucide-react";
 
 export default function Dashboard() {
   const router = useRouter();
