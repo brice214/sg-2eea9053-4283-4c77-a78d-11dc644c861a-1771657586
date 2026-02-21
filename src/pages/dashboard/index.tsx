@@ -1,89 +1,73 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authService } from "@/services/authService";
-import { Shield, LogOut, Loader2, Users, FileText, BarChart3, Settings } from "lucide-react";
-import type { AuthUser } from "@/services/authService";
+import { LogOut, Users, FileText, DollarSign, Settings, BarChart3 } from "lucide-react";
 
-export default function DashboardPage() {
+export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string>("");
 
   useEffect(() => {
-    checkAuthentication();
+    checkAuth();
   }, []);
 
-  const checkAuthentication = async () => {
-    try {
-      const currentUser = await authService.getCurrentUser();
-      if (!currentUser) {
-        router.push("/auth/login");
-        return;
-      }
-      setUser(currentUser);
-    } catch (err) {
-      console.error("Error checking authentication:", err);
+  const checkAuth = async () => {
+    const session = await authService.getCurrentSession();
+    if (!session) {
       router.push("/auth/login");
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    const user = await authService.getCurrentUser();
+    if (user) {
+      setUserEmail(user.email);
+    }
+
+    setLoading(false);
   };
 
   const handleLogout = async () => {
-    try {
-      await authService.signOut();
-      router.push("/auth/login");
-    } catch (err) {
-      console.error("Error logging out:", err);
-    }
+    await authService.signOut();
+    router.push("/auth/login");
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-yellow-50">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-600 border-r-transparent"></div>
       </div>
     );
   }
 
   return (
     <>
-      <SEO 
-        title="Tableau de bord - USSALA Gabon"
-        description="Tableau de bord de la plateforme USSALA"
+      <SEO
+        title="Tableau de bord - USSALA"
+        description="Tableau de bord principal de la plateforme USSALA"
       />
-      
+
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-yellow-50">
-        <header className="bg-white border-b border-green-100 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-blue-600 rounded-full flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-green-700 to-blue-700 bg-clip-text text-transparent">
-                    USSALA
-                  </h1>
-                  <p className="text-xs text-gray-500">
-                    Gestion Administrative des Agents Publics
-                  </p>
-                </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">USSALA</h1>
+                <p className="text-sm text-gray-600">
+                  Plateforme de Gestion Administrative et Statutaire des Agents Publics
+                </p>
               </div>
-              
               <div className="flex items-center gap-4">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-gray-700">{user?.email}</p>
-                  <p className="text-xs text-gray-500">Agent connecté</p>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{userEmail}</p>
+                  <p className="text-xs text-gray-500">Connecté</p>
                 </div>
-                <Button 
-                  onClick={handleLogout}
-                  variant="outline"
-                  className="border-green-200 hover:bg-green-50"
-                >
+                <Button variant="outline" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Déconnexion
                 </Button>
@@ -92,82 +76,155 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Bienvenue sur USSALA
-            </h2>
-            <p className="text-gray-600">
-              Plateforme de Gestion Administrative et Statutaire des Agents Publics du Gabon
-            </p>
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Bienvenue sur USSALA
+              </h2>
+              <p className="text-lg text-gray-600">
+                Sélectionnez un module pour commencer la gestion des carrières
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {/* Module Gestion RH */}
+              <Link href="/dashboard/rh">
+                <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer border-green-200 hover:border-green-400 bg-gradient-to-br from-white to-green-50">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl">Gestion RH</CardTitle>
+                      <Users className="h-8 w-8 text-green-600" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-base">
+                      Création et gestion des dossiers administratifs des agents publics
+                    </CardDescription>
+                    <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                      <li>• Création de dossiers</li>
+                      <li>• Validation administrative</li>
+                      <li>• Gestion des pièces</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              {/* Module Situations administratives (à venir) */}
+              <Card className="opacity-50 cursor-not-allowed border-blue-200 bg-gradient-to-br from-white to-blue-50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl">Situations Admin.</CardTitle>
+                    <FileText className="h-8 w-8 text-blue-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base">
+                    Gestion des situations administratives des agents
+                  </CardDescription>
+                  <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                    <li>• Mutations</li>
+                    <li>• Promotions</li>
+                    <li>• Congés & Absences</li>
+                  </ul>
+                  <div className="mt-4">
+                    <span className="inline-block px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                      Prochainement
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Module Situations financières (à venir) */}
+              <Card className="opacity-50 cursor-not-allowed border-yellow-200 bg-gradient-to-br from-white to-yellow-50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl">Situations Fin.</CardTitle>
+                    <DollarSign className="h-8 w-8 text-yellow-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base">
+                    Gestion financière et des soldes des agents
+                  </CardDescription>
+                  <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                    <li>• Salaires</li>
+                    <li>• Primes & Indemnités</li>
+                    <li>• Historique de paie</li>
+                  </ul>
+                  <div className="mt-4">
+                    <span className="inline-block px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                      Prochainement
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Module Statistiques (à venir) */}
+              <Card className="opacity-50 cursor-not-allowed border-purple-200 bg-gradient-to-br from-white to-purple-50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl">Statistiques</CardTitle>
+                    <BarChart3 className="h-8 w-8 text-purple-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base">
+                    Tableaux de bord et analyses statistiques
+                  </CardDescription>
+                  <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                    <li>• Effectifs</li>
+                    <li>• Mouvements</li>
+                    <li>• Analyses RH</li>
+                  </ul>
+                  <div className="mt-4">
+                    <span className="inline-block px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                      Prochainement
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Module Paramètres (à venir) */}
+              <Card className="opacity-50 cursor-not-allowed border-gray-200 bg-gradient-to-br from-white to-gray-50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl">Paramètres</CardTitle>
+                    <Settings className="h-8 w-8 text-gray-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base">
+                    Configuration et administration système
+                  </CardDescription>
+                  <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                    <li>• Utilisateurs</li>
+                    <li>• Droits d'accès</li>
+                    <li>• Référentiels</li>
+                  </ul>
+                  <div className="mt-4">
+                    <span className="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                      Prochainement
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="border-green-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-2">
-                  <Users className="h-6 w-6 text-green-600" />
-                </div>
-                <CardTitle className="text-lg">Gestion des Agents</CardTitle>
-                <CardDescription>Module à venir</CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-blue-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
-                  <FileText className="h-6 w-6 text-blue-600" />
-                </div>
-                <CardTitle className="text-lg">Situations Admin.</CardTitle>
-                <CardDescription>Module à venir</CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-yellow-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-2">
-                  <BarChart3 className="h-6 w-6 text-yellow-600" />
-                </div>
-                <CardTitle className="text-lg">Situations Financières</CardTitle>
-                <CardDescription>Module à venir</CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-gray-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-2">
-                  <Settings className="h-6 w-6 text-gray-600" />
-                </div>
-                <CardTitle className="text-lg">Paramètres</CardTitle>
-                <CardDescription>Module à venir</CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-
-          <Card className="border-green-100">
-            <CardHeader>
-              <CardTitle>Informations système</CardTitle>
-              <CardDescription>État de votre connexion</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-sm text-gray-600">Utilisateur</span>
-                <span className="text-sm font-medium">{user?.email}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b">
-                <span className="text-sm text-gray-600">ID Utilisateur</span>
-                <span className="text-sm font-mono text-gray-500">{user?.id.substring(0, 20)}...</span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-gray-600">Statut</span>
-                <span className="inline-flex items-center gap-2 text-sm">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  <span className="font-medium text-green-700">Connecté</span>
-                </span>
-              </div>
-            </CardContent>
-          </Card>
         </main>
+
+        {/* Footer */}
+        <footer className="mt-16 border-t border-gray-200 bg-white">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <p>© 2026 USSALA - République Gabonaise</p>
+              <p className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                Connexion sécurisée (SSL/TLS)
+              </p>
+            </div>
+          </div>
+        </footer>
       </div>
     </>
   );
