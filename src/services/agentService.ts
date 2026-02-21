@@ -92,7 +92,7 @@ export const agentService = {
         lieu_naissance: data.lieu_naissance,
         sexe: data.sexe,
         nationalite: data.nationalite,
-        situation_matrimoniale: data.situation_matrimoniale,
+        situation_matrimoniale: data.situation_matrimoniale.toLowerCase(), // Force lowercase to match DB constraint
         nombre_enfants: data.nombre_enfants,
         telephone: data.telephone,
         email: data.email,
