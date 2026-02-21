@@ -116,6 +116,10 @@ export const agentService = {
         actif: true
       };
 
+      console.log("🔍 [createAgent] AGENT DATA TO INSERT:", JSON.stringify(agentData, null, 2));
+      console.log("🔍 [createAgent] situation_matrimoniale VALUE:", agentData.situation_matrimoniale);
+      console.log("🔍 [createAgent] situation_matrimoniale TYPE:", typeof agentData.situation_matrimoniale);
+
       const { data: newAgent, error: agentError } = await supabase
         .from("agents")
         .insert(agentData)
