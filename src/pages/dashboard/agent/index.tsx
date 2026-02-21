@@ -57,7 +57,7 @@ interface AgentProfile {
     total_brut: number;
     total_retenues: number;
     net_a_payer: number;
-    rib?: string;
+    numero_compte?: string;
     banque?: string;
   };
 }
@@ -461,11 +461,11 @@ export default function AgentDashboard() {
                             </span>
                           </div>
                         )}
-                        {agent.informations_financieres.rib && (
+                        {agent.informations_financieres.numero_compte && (
                           <div className="flex justify-between items-center py-2">
-                            <span className="text-sm text-gray-500">RIB</span>
+                            <span className="text-sm text-gray-500">Numéro de compte</span>
                             <span className="font-mono text-sm font-medium text-gray-900">
-                              {agent.informations_financieres.rib}
+                              {agent.informations_financieres.numero_compte}
                             </span>
                           </div>
                         )}

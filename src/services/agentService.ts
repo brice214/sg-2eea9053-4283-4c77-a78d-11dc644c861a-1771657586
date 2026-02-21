@@ -590,7 +590,7 @@ export const agentService = {
             total_brut,
             total_retenues,
             net_a_payer,
-            rib,
+            numero_compte,
             banque
           )
         `)
