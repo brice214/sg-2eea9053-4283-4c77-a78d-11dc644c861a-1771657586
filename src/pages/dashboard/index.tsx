@@ -106,51 +106,55 @@ export default function Dashboard() {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               
-              {/* Module Gestion RH */}
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-green-200 hover:border-green-400">
-                <Link href="/dashboard/rh">
-                  <CardHeader className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl">Gestion RH</CardTitle>
-                      <div className="p-3 bg-green-100 rounded-lg">
-                        <Users className="h-6 w-6 text-green-600" />
+              {/* Module Gestion RH - Visible seulement pour RH Ministère */}
+              {userProfile?.role === 'rh_ministere' && (
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer border-green-200 hover:border-green-400">
+                  <Link href="/dashboard/rh">
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-xl">Gestion RH</CardTitle>
+                        <div className="p-3 bg-green-100 rounded-lg">
+                          <Users className="h-6 w-6 text-green-600" />
+                        </div>
                       </div>
-                    </div>
-                    <CardDescription>
-                      Gestion des dossiers administratifs des agents
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600">
-                      Créer et gérer les dossiers des agents publics de votre ministère
-                    </p>
-                  </CardContent>
-                </Link>
-              </Card>
+                      <CardDescription>
+                        Gestion des dossiers administratifs des agents
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600">
+                        Créer et gérer les dossiers des agents publics de votre ministère
+                      </p>
+                    </CardContent>
+                  </Link>
+                </Card>
+              )}
 
-              {/* Module DCRH */}
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-blue-200 hover:border-blue-400">
-                <Link href="/dashboard/dcrh">
-                  <CardHeader className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl">DCRH</CardTitle>
-                      <div className="p-3 bg-blue-100 rounded-lg">
-                        <FileCheck className="h-6 w-6 text-blue-600" />
+              {/* Module DCRH - Visible seulement pour RH Central (DCRH) */}
+              {userProfile?.role === 'rh_central' && (
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer border-blue-200 hover:border-blue-400">
+                  <Link href="/dashboard/dcrh">
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-xl">DCRH</CardTitle>
+                        <div className="p-3 bg-blue-100 rounded-lg">
+                          <FileCheck className="h-6 w-6 text-blue-600" />
+                        </div>
                       </div>
-                    </div>
-                    <CardDescription>
-                      Validation centrale des dossiers
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600">
-                      Valider ou rejeter les dossiers administratifs soumis
-                    </p>
-                  </CardContent>
-                </Link>
-              </Card>
+                      <CardDescription>
+                        Validation centrale des dossiers
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600">
+                        Valider ou rejeter les dossiers administratifs soumis
+                      </p>
+                    </CardContent>
+                  </Link>
+                </Card>
+              )}
 
-              {/* Module Situations Administratives */}
+              {/* Module Situations Administratives - Visible pour tous (futur) */}
               <Card className="hover:shadow-lg transition-shadow opacity-50 cursor-not-allowed border-yellow-200">
                 <CardHeader className="space-y-1">
                   <div className="flex items-center justify-between">

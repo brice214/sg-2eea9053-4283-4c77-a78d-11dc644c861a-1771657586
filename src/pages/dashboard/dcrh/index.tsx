@@ -76,7 +76,6 @@ export default function DCRHDashboard() {
 
   useEffect(() => {
     checkAuth();
-    loadAgents();
   }, []);
 
   const checkAuth = async () => {
